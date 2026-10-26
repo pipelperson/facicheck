@@ -4,6 +4,7 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
+import { THEMES } from "@/lib/themes";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
@@ -23,21 +24,21 @@ const STEPS: Step[] = [
     text: "Ikuti panduan posisi wajah, pencahayaan, dan pengambilan gambar agar sistem dapat memproses gambar dengan lebih baik.",
     icon: "/icons/howitworks-1-prepare.png",
     Fallback: BookOpenCheck,
-    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--rose) 45%, transparent), transparent 60%), linear-gradient(160deg, var(--burgundy) 0%, color-mix(in oklab, var(--burgundy) 68%, black) 100%)",
+    bg: THEMES.burgundy.bg,
   },
   {
     title: "Let FaciCheck analyze",
     text: "Sistem memproses gambar untuk mengamati fitur visual wajah sesuai kemampuan model yang digunakan.",
     icon: "/icons/howitworks-2-analyze.png",
     Fallback: ScanFace,
-    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--rose) 32%, transparent), transparent 60%), linear-gradient(160deg, var(--navy) 0%, color-mix(in oklab, var(--navy) 62%, black) 100%)",
+    bg: THEMES.navy.bg,
   },
   {
     title: "Understand the result",
     text: "Pelajari hasil analisis, keterbatasannya, dan langkah selanjutnya yang dapat dipertimbangkan.",
     icon: "/icons/howitworks-3-understand.png",
     Fallback: FileText,
-    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--sage) 50%, transparent), transparent 60%), linear-gradient(160deg, var(--olive) 0%, color-mix(in oklab, var(--olive) 66%, black) 100%)",
+    bg: THEMES.olive.bg,
   },
 ];
 
@@ -230,21 +231,23 @@ export function HowItWorks() {
         <p data-fade className="text-sm font-semibold tracking-[0.18em] text-burgundy">
           CARA KERJA
         </p>
-        <h2
-          id="cara-kerja-title"
-          ref={headRef}
-          className="mt-3 max-w-3xl text-3xl leading-[1.15] font-bold tracking-tight text-balance text-navy sm:text-4xl lg:text-5xl"
-        >
-          A simple process, a clearer understanding.
-        </h2>
-        <p data-fade className="mt-5 max-w-xl text-base leading-relaxed text-pretty text-olive sm:text-lg">
-          Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah sederhana untuk mengambil
-          gambar wajah dan memahami informasi visual yang ditampilkan FaciCheck.
-        </p>
+        <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
+          <h2
+            id="cara-kerja-title"
+            ref={headRef}
+            className="font-display text-4xl leading-[1.05] tracking-tight text-balance text-navy sm:text-5xl lg:text-[clamp(2.5rem,4.4vw,4rem)]"
+          >
+            A simple process, a <em className="text-burgundy">clearer understanding.</em>
+          </h2>
+          <p data-fade className="mt-5 max-w-md text-base leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2">
+            Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah sederhana untuk mengambil
+            gambar wajah dan memahami informasi visual yang ditampilkan FaciCheck.
+          </p>
+        </div>
       </div>
 
       {/* Track kartu */}
-      <div ref={viewportRef} className="mt-10 lg:mt-12 lg:overflow-x-auto lg:py-6">
+      <div ref={viewportRef} className="mt-10 lg:mt-6 lg:overflow-x-auto lg:py-5">
         <div
           ref={trackRef}
           className="flex flex-col gap-5 px-5 will-change-transform lg:w-max lg:flex-row lg:gap-6 lg:pr-[max(1.25rem,calc((100vw-72rem)/2))] lg:pl-[max(1.25rem,calc((100vw-72rem)/2))]"
@@ -254,7 +257,7 @@ export function HowItWorks() {
               key={s.title}
               data-card
               data-on="false"
-              className="group/card relative flex min-h-[19rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-muted p-7 transition-[translate,box-shadow,border-color] duration-700 ease-out data-[on=true]:border-transparent data-[on=true]:shadow-soft lg:h-[min(25rem,46vh)] lg:w-[min(34rem,46vw)] lg:shrink-0 lg:p-9 lg:data-[on=true]:-translate-y-2"
+              className="group/card relative flex min-h-[19rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-muted p-7 transition-[translate,box-shadow,border-color] duration-700 ease-out data-[on=true]:border-transparent data-[on=true]:shadow-soft lg:h-[clamp(15rem,42vh,25rem)] lg:w-[min(34rem,46vw)] lg:shrink-0 lg:p-9 lg:data-[on=true]:-translate-y-2"
             >
               {/* lapisan warna, fade-in saat aktif */}
               <div
@@ -267,13 +270,13 @@ export function HowItWorks() {
                 <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card/70 opacity-60 grayscale transition-[filter,opacity,background-color,transform] duration-700 ease-out group-data-[on=true]/card:scale-100 group-data-[on=true]/card:bg-card group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
                   <StepIcon i={i} />
                 </span>
-                <span className="text-5xl font-extrabold tabular-nums text-navy/15 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/30">
+                <span className="font-display text-6xl tabular-nums text-navy/15 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/30">
                   0{i + 1}
                 </span>
               </div>
 
               <div className="relative z-10 mt-auto pt-8">
-                <h3 className="text-2xl font-bold tracking-tight text-navy/45 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
+                <h3 className="font-display text-3xl tracking-tight text-navy/45 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
                   {s.title}
                 </h3>
                 <p className="mt-3 max-w-md text-base leading-relaxed text-olive/60 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/80">

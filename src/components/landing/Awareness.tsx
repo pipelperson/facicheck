@@ -4,21 +4,46 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
 import { useGSAP } from "@gsap/react";
 import { Reveal } from "./Reveal";
+import { THEMES } from "@/lib/themes";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 }
 
-const main = { fill: "none", stroke: "var(--navy)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
-const accent = { fill: "none", stroke: "var(--burgundy)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
+const main = {
+  fill: "none",
+  stroke: "var(--navy)",
+  strokeWidth: 2.5,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
+const accent = {
+  fill: "none",
+  stroke: "var(--burgundy)",
+  strokeWidth: 2.5,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+} as const;
 
 /* Cadangan jika PNG belum ada */
 function ScanArt() {
   return (
     <svg viewBox="0 0 120 120" className="h-20 w-20" aria-hidden="true">
-      <path {...accent} d="M20 40V24a4 4 0 0 1 4-4h16M80 20h16a4 4 0 0 1 4 4v16M100 80v16a4 4 0 0 1-4 4H80M40 100H24a4 4 0 0 1-4-4V80" />
+      <path
+        {...accent}
+        d="M20 40V24a4 4 0 0 1 4-4h16M80 20h16a4 4 0 0 1 4 4v16M100 80v16a4 4 0 0 1-4 4H80M40 100H24a4 4 0 0 1-4-4V80"
+      />
       <ellipse {...main} cx="60" cy="60" rx="22" ry="28" />
-      <line x1="60" y1="28" x2="60" y2="92" stroke="var(--rose)" strokeWidth="1.5" strokeDasharray="3 5" strokeOpacity=".7" />
+      <line
+        x1="60"
+        y1="28"
+        x2="60"
+        y2="92"
+        stroke="var(--rose)"
+        strokeWidth="1.5"
+        strokeDasharray="3 5"
+        strokeOpacity=".7"
+      />
       <circle cx="51" cy="54" r="2.5" fill="var(--rose)" />
       <circle cx="69" cy="54" r="2.5" fill="var(--rose)" />
       <path {...main} d="M52 72q8 5 16 0" />
@@ -40,7 +65,10 @@ function EyeArt() {
 function ShieldArt() {
   return (
     <svg viewBox="0 0 120 120" className="h-20 w-20" aria-hidden="true">
-      <path {...main} d="M60 14L98 28V58C98 82 80 98 60 106C40 98 22 82 22 58V28Z" />
+      <path
+        {...main}
+        d="M60 14L98 28V58C98 82 80 98 60 106C40 98 22 82 22 58V28Z"
+      />
       <path {...accent} d="M60 44V74M45 59H75" />
     </svg>
   );
@@ -64,13 +92,17 @@ const ITEMS = [
   },
 ];
 
-const ICONS = ["/icons/awareness-1.png", "/icons/awareness-2.png", "/icons/awareness-3.png"];
+const ICONS = [
+  "/icons/awareness-1.png",
+  "/icons/awareness-2.png",
+  "/icons/awareness-3.png",
+];
 const TILT = [2.5, -2.5, 0]; // kanan, kiri, lurus
 
-const CARD_BG =
-  "radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--rose) 30%, transparent), transparent 60%), linear-gradient(165deg, color-mix(in oklab, var(--rose) 14%, white) 0%, color-mix(in oklab, var(--rose) 26%, white) 100%)";
-const CARD_BORDER = "1px solid color-mix(in oklab, var(--rose) 35%, transparent)";
-const CARD_SHADOW = "0 24px 40px -28px color-mix(in oklab, var(--burgundy) 45%, transparent)";
+// const CARD_BG =
+//   "radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--rose) 30%, transparent), transparent 60%), linear-gradient(165deg, color-mix(in oklab, var(--rose) 14%, white) 0%, color-mix(in oklab, var(--rose) 26%, white) 100%)";
+// const CARD_BORDER = "1px solid color-mix(in oklab, var(--rose) 35%, transparent)";
+// const CARD_SHADOW = "0 24px 40px -28px color-mix(in oklab, var(--burgundy) 45%, transparent)";
 
 function CardIcon({ i }: { i: number }) {
   const [failed, setFailed] = useState(false);
@@ -91,7 +123,7 @@ function CardIcon({ i }: { i: number }) {
       loading="lazy"
       decoding="async"
       onError={() => setFailed(true)}
-      className="h-20 w-20 object-contain"
+      className="h-[4.5rem] w-[4.5rem] object-contain"
     />
   );
 }
@@ -100,16 +132,31 @@ function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
   const { title, text } = ITEMS[i]!;
   return (
     <div
-      className="flex h-full flex-col rounded-[1.75rem] p-7"
-      style={{ background: CARD_BG, border: CARD_BORDER, boxShadow: CARD_SHADOW }}
+      className="flex h-full flex-col rounded-[1.75rem] p-7 text-primary-foreground"
+      style={{
+        background: THEMES.burgundy.bg,
+        boxShadow: THEMES.burgundy.shadow,
+      }}
     >
       <div className="flex items-start justify-between">
-        <CardIcon i={i} />
-        <span className="text-sm font-semibold tabular-nums text-burgundy">0{i + 1} / 03</span>
+        <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card">
+          <CardIcon i={i} />
+        </span>
+        <span className="text-sm font-semibold tabular-nums text-primary-foreground/70">
+          0{i + 1} / 03
+        </span>
       </div>
       <div className="mt-auto pt-6">
-        <h3 className={showTitle ? "mb-3 text-xl font-semibold tracking-tight text-navy" : "sr-only"}>{title}</h3>
-        <p className="text-base leading-relaxed text-olive">{text}</p>
+        <h3
+          className={
+            showTitle ? "mb-3 font-display text-3xl tracking-tight" : "sr-only"
+          }
+        >
+          {title}
+        </h3>
+        <p className="text-base leading-relaxed text-primary-foreground/85">
+          {text}
+        </p>
       </div>
     </div>
   );
@@ -126,7 +173,9 @@ export function Awareness() {
   // Entrance: headline per baris + daftar sub-headline muncul berurutan
   useGSAP(
     () => {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
       const items = itemRefs.current.filter(Boolean);
       if (reduce) {
         gsap.set(items, { autoAlpha: 1 });
@@ -143,7 +192,11 @@ export function Awareness() {
               duration: 0.9,
               ease: "power4.out",
               stagger: 0.1,
-              scrollTrigger: { trigger: headline.current, start: "top 85%", once: true },
+              scrollTrigger: {
+                trigger: headline.current,
+                start: "top 85%",
+                once: true,
+              },
             }),
         });
       }
@@ -156,7 +209,11 @@ export function Awareness() {
           duration: 0.8,
           ease: "power3.out",
           stagger: 0.1,
-          scrollTrigger: { trigger: root.current, start: "top 75%", once: true },
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top 75%",
+            once: true,
+          },
         },
       );
     },
@@ -166,13 +223,23 @@ export function Awareness() {
   // Crossfade card; tiap card punya kemiringan sendiri
   useGSAP(
     () => {
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
       const t = first.current || reduce ? 0 : 1;
       cardRefs.current.forEach((el, i) => {
         if (!el) return;
         const rot = TILT[i] ?? 0;
         if (i === active) {
-          gsap.to(el, { autoAlpha: 1, y: 0, rotate: rot, duration: 0.6 * t, delay: 0.1 * t, ease: "power3.out", overwrite: true });
+          gsap.to(el, {
+            autoAlpha: 1,
+            y: 0,
+            rotate: rot,
+            duration: 0.6 * t,
+            delay: 0.1 * t,
+            ease: "power3.out",
+            overwrite: true,
+          });
         } else {
           gsap.to(el, {
             autoAlpha: 0,
@@ -190,15 +257,19 @@ export function Awareness() {
   );
 
   return (
-    <div ref={root} className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-20">
+    <div
+      ref={root}
+      className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-center lg:gap-20"
+    >
       {/* KIRI */}
       <div>
         <h2
           id="tentang-title"
           ref={headline}
-          className="max-w-lg text-2xl leading-[1.2] font-semibold tracking-tight text-balance text-navy sm:text-3xl lg:text-[2.1rem]"
+          className="max-w-xl font-display text-4xl leading-[1.1] tracking-tight text-balance text-navy sm:text-5xl"
         >
-          A little more awareness can make a difference.
+          A little more <em className="text-burgundy">awareness</em> can make a
+          difference.
         </h2>
 
         {/* Desktop: daftar sub-headline */}
@@ -223,8 +294,12 @@ export function Awareness() {
                   active === i ? "text-burgundy" : "text-navy"
                 }`}
               >
-                <span className="w-7 shrink-0 text-sm font-semibold tabular-nums">0{i + 1}</span>
-                <span className="text-3xl font-medium tracking-tight xl:text-4xl">{it.title}</span>
+                <span className="w-7 shrink-0 text-sm font-semibold tabular-nums">
+                  0{i + 1}
+                </span>
+                <span className="font-display text-4xl tracking-tight xl:text-5xl">
+                  {it.title}
+                </span>
               </button>
             </li>
           ))}
@@ -262,7 +337,10 @@ export function Awareness() {
         </div>
         <div className="mt-6 flex gap-2" aria-hidden="true">
           {ITEMS.map((_, i) => (
-            <span key={i} className={`h-1 rounded-full transition-all duration-500 ${active === i ? "w-10 bg-burgundy" : "w-4 bg-navy/20"}`} />
+            <span
+              key={i}
+              className={`h-1 rounded-full transition-all duration-500 ${active === i ? "w-10 bg-burgundy" : "w-4 bg-navy/20"}`}
+            />
           ))}
         </div>
       </div>
