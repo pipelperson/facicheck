@@ -9,8 +9,8 @@ if (typeof window !== "undefined") {
   gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
 }
 
-const main = { fill: "none", stroke: "var(--primary-foreground)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
-const accent = { fill: "none", stroke: "var(--rose)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
+const main = { fill: "none", stroke: "var(--navy)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
+const accent = { fill: "none", stroke: "var(--burgundy)", strokeWidth: 2.5, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 
 /* Cadangan jika PNG belum ada */
 function ScanArt() {
@@ -68,8 +68,9 @@ const ICONS = ["/icons/awareness-1.png", "/icons/awareness-2.png", "/icons/aware
 const TILT = [2.5, -2.5, 0]; // kanan, kiri, lurus
 
 const CARD_BG =
-  "radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--burgundy) 28%, transparent), transparent 60%), linear-gradient(165deg, var(--navy) 0%, color-mix(in oklab, var(--navy) 50%, black) 100%)";
-const CARD_SHADOW = "0 24px 40px -24px color-mix(in oklab, var(--navy) 55%, transparent)";
+  "radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--rose) 30%, transparent), transparent 60%), linear-gradient(165deg, color-mix(in oklab, var(--rose) 14%, white) 0%, color-mix(in oklab, var(--rose) 26%, white) 100%)";
+const CARD_BORDER = "1px solid color-mix(in oklab, var(--rose) 35%, transparent)";
+const CARD_SHADOW = "0 24px 40px -28px color-mix(in oklab, var(--burgundy) 45%, transparent)";
 
 function CardIcon({ i }: { i: number }) {
   const [failed, setFailed] = useState(false);
@@ -98,14 +99,17 @@ function CardIcon({ i }: { i: number }) {
 function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
   const { title, text } = ITEMS[i]!;
   return (
-    <div className="flex h-full flex-col rounded-[1.75rem] p-7 text-secondary-foreground" style={{ background: CARD_BG, boxShadow: CARD_SHADOW }}>
+    <div
+      className="flex h-full flex-col rounded-[1.75rem] p-7"
+      style={{ background: CARD_BG, border: CARD_BORDER, boxShadow: CARD_SHADOW }}
+    >
       <div className="flex items-start justify-between">
         <CardIcon i={i} />
-        <span className="text-sm font-semibold tabular-nums text-rose">0{i + 1} / 03</span>
+        <span className="text-sm font-semibold tabular-nums text-burgundy">0{i + 1} / 03</span>
       </div>
       <div className="mt-auto pt-6">
-        <h3 className={showTitle ? "mb-3 text-xl font-semibold tracking-tight" : "sr-only"}>{title}</h3>
-        <p className="text-base leading-relaxed text-secondary-foreground/85">{text}</p>
+        <h3 className={showTitle ? "mb-3 text-xl font-semibold tracking-tight text-navy" : "sr-only"}>{title}</h3>
+        <p className="text-base leading-relaxed text-olive">{text}</p>
       </div>
     </div>
   );

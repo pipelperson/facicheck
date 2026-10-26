@@ -1,97 +1,300 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, Camera, ScanFace, FileText } from "lucide-react";
+import { BookOpenCheck, ScanFace, FileText, type LucideIcon } from "lucide-react";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SplitText } from "gsap/SplitText";
+import { useGSAP } from "@gsap/react";
 
-const STEPS = [
-  { icon: BookOpenCheck, title: "Persiapkan", text: "Baca petunjuk pengambilan gambar: pencahayaan cukup, wajah menghadap lurus ke kamera, dan ekspresi netral." },
-  { icon: Camera, title: "Ambil Gambar", text: "Izinkan akses kamera, lalu ambil foto wajah sesuai panduan yang ditampilkan di layar." },
-  { icon: ScanFace, title: "Analisis Wajah", text: "Gambar dikirim untuk diproses secara visual oleh layanan analisis, apabila layanan tersebut tersedia." },
-  { icon: FileText, title: "Pahami Hasil", text: "Baca informasi skrining yang diberikan beserta keterbatasannya, lalu putuskan langkah selanjutnya." },
+if (typeof window !== "undefined") {
+  gsap.registerPlugin(useGSAP, ScrollTrigger, SplitText);
+}
+
+type Step = {
+  title: string;
+  text: string;
+  icon: string;
+  Fallback: LucideIcon;
+  bg: string;
+};
+
+const STEPS: Step[] = [
+  {
+    title: "Prepare your face",
+    text: "Ikuti panduan posisi wajah, pencahayaan, dan pengambilan gambar agar sistem dapat memproses gambar dengan lebih baik.",
+    icon: "/icons/howitworks-1-prepare.png",
+    Fallback: BookOpenCheck,
+    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--rose) 45%, transparent), transparent 60%), linear-gradient(160deg, var(--burgundy) 0%, color-mix(in oklab, var(--burgundy) 68%, black) 100%)",
+  },
+  {
+    title: "Let FaciCheck analyze",
+    text: "Sistem memproses gambar untuk mengamati fitur visual wajah sesuai kemampuan model yang digunakan.",
+    icon: "/icons/howitworks-2-analyze.png",
+    Fallback: ScanFace,
+    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--rose) 32%, transparent), transparent 60%), linear-gradient(160deg, var(--navy) 0%, color-mix(in oklab, var(--navy) 62%, black) 100%)",
+  },
+  {
+    title: "Understand the result",
+    text: "Pelajari hasil analisis, keterbatasannya, dan langkah selanjutnya yang dapat dipertimbangkan.",
+    icon: "/icons/howitworks-3-understand.png",
+    Fallback: FileText,
+    bg: "radial-gradient(110% 90% at 100% 0%, color-mix(in oklab, var(--sage) 50%, transparent), transparent 60%), linear-gradient(160deg, var(--olive) 0%, color-mix(in oklab, var(--olive) 66%, black) 100%)",
+  },
 ];
 
-function StepCard({ i, active }: { i: number; active: boolean }) {
-  const S = STEPS[i]!;
+/* Kartu "menyala" jika salah satu flag aktif: scroll ATAU hover */
+type Flag = "scroll" | "hover";
+const sync = (el: HTMLElement) => {
+  el.dataset.on = el.dataset.scroll === "1" || el.dataset.hover === "1" ? "true" : "false";
+};
+const setFlag = (el: HTMLElement, key: Flag, value: boolean) => {
+  el.dataset[key] = value ? "1" : "0";
+  sync(el);
+};
+const resetCard = (el: HTMLElement) => {
+  el.dataset.scroll = "0";
+  el.dataset.hover = "0";
+  sync(el);
+};
+
+function StepIcon({ i }: { i: number }) {
+  const [failed, setFailed] = useState(false);
+  const ref = useRef<HTMLImageElement>(null);
+  useEffect(() => {
+    const img = ref.current;
+    if (img && img.complete && img.naturalWidth === 0) setFailed(true);
+  }, []);
+  const { Fallback, icon } = STEPS[i]!;
+  if (failed) return <Fallback className="h-9 w-9 text-burgundy" strokeWidth={1.75} />;
   return (
-    <article
-      className={`rounded-3xl border bg-card p-7 transition-all duration-500 ${active ? "scale-100 border-primary/30 opacity-100 shadow-soft" : "scale-[0.97] border-border opacity-70"}`}
-    >
-      <div className="flex items-center justify-between">
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-burgundy"><S.icon className="h-6 w-6" /></span>
-        <span className="text-4xl font-extrabold text-rose/60">0{i + 1}</span>
-      </div>
-      <h3 className="mt-6 text-xl font-bold text-navy">{S.title}</h3>
-      <p className="mt-2 leading-relaxed text-olive">{S.text}</p>
-    </article>
+    <img
+      ref={ref}
+      src={icon}
+      alt=""
+      width={72}
+      height={72}
+      decoding="async"
+      onError={() => setFailed(true)}
+      className="h-[4.5rem] w-[4.5rem] object-contain"
+    />
   );
 }
 
 export function HowItWorks() {
-  const wrap = useRef<HTMLDivElement>(null);
-  const [progress, setProgress] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const headRef = useRef<HTMLHeadingElement>(null);
 
-  useEffect(() => {
-    const onScroll = () => {
-      const el = wrap.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      const total = r.height - window.innerHeight;
-      setProgress(Math.min(1, Math.max(0, -r.top / (total || 1))));
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, []);
+  useGSAP(
+    () => {
+      const root = sectionRef.current;
+      if (!root) return;
+      const cards = gsap.utils.toArray<HTMLElement>("[data-card]", root);
+      const dashes = gsap.utils.toArray<HTMLElement>("[data-dash]", root);
+      const mm = gsap.matchMedia();
 
-  const active = Math.min(STEPS.length - 1, Math.floor(progress * STEPS.length));
+      /* Headline per baris + teks pendukung (semua layar, kecuali reduced motion) */
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const head = headRef.current;
+        if (head) {
+          SplitText.create(head, {
+            type: "lines",
+            mask: "lines",
+            autoSplit: true,
+            onSplit: (self) =>
+              gsap.from(self.lines, {
+                yPercent: 110,
+                duration: 0.9,
+                ease: "power4.out",
+                stagger: 0.1,
+                scrollTrigger: { trigger: head, start: "top 88%", once: true },
+              }),
+          });
+        }
+        gsap.from("[data-fade]", {
+          y: 18,
+          autoAlpha: 0,
+          duration: 0.8,
+          ease: "power3.out",
+          stagger: 0.12,
+          scrollTrigger: { trigger: root, start: "top 75%", once: true },
+        });
+      });
 
-  const header = (
-    <div className="max-w-2xl">
-      <p className="text-sm font-semibold tracking-[0.18em] text-burgundy">CARA KERJA</p>
-      <h2 className="mt-3 text-3xl font-bold tracking-tight text-navy sm:text-4xl">Bagaimana Cara Kerjanya?</h2>
-      <p className="mt-4 text-lg text-olive">Empat langkah sederhana, dari persiapan hingga memahami informasi skrining.</p>
-    </div>
+      /* DESKTOP: pin + geser horizontal */
+      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
+        const viewport = viewportRef.current;
+        const track = trackRef.current;
+        if (!viewport || !track) return;
+
+        viewport.style.overflowX = "hidden";
+        const dist = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
+        const length = () => Math.max(dist() * 1.4, window.innerHeight * 1.4);
+
+        let current = -1;
+        const apply = (idx: number) => {
+          if (idx === current) return;
+          current = idx;
+          cards.forEach((c, i) => setFlag(c, "scroll", i <= idx));
+          dashes.forEach((d, i) => {
+            d.dataset.on = i === idx ? "true" : "false";
+          });
+        };
+        apply(0);
+
+        gsap.from(cards, {
+          y: 48,
+          autoAlpha: 0,
+          duration: 0.9,
+          ease: "power3.out",
+          stagger: 0.12,
+          scrollTrigger: { trigger: root, start: "top 70%", once: true },
+        });
+
+        gsap.to(track, {
+          x: () => -dist(),
+          ease: "none",
+          scrollTrigger: {
+            trigger: root,
+            start: "top top",
+            end: () => `+=${length()}`,
+            pin: true,
+            scrub: 0.6,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+            onUpdate: (self) =>
+              apply(Math.min(cards.length - 1, Math.floor(self.progress * cards.length))),
+          },
+        });
+
+        // Hover: kartu berwarna saat pointer mouse mengarah ke kartu
+        const offs = cards.map((card) => {
+          const enter = (e: PointerEvent) => {
+            if (e.pointerType === "mouse") setFlag(card, "hover", true);
+          };
+          const leave = () => setFlag(card, "hover", false);
+          card.addEventListener("pointerenter", enter);
+          card.addEventListener("pointerleave", leave);
+          return () => {
+            card.removeEventListener("pointerenter", enter);
+            card.removeEventListener("pointerleave", leave);
+          };
+        });
+
+        return () => {
+          offs.forEach((off) => off());
+          viewport.style.overflowX = "";
+          cards.forEach(resetCard);
+          dashes.forEach((d) => {
+            d.dataset.on = "false";
+          });
+        };
+      });
+
+      /* MOBILE/TABLET: vertikal, berwarna saat di area tengah layar */
+      mm.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
+        const triggers = cards.map((card) =>
+          ScrollTrigger.create({
+            trigger: card,
+            start: "top 70%",
+            end: "bottom 30%",
+            onToggle: (self) => setFlag(card, "scroll", self.isActive),
+          }),
+        );
+        return () => {
+          triggers.forEach((t) => t.kill());
+          cards.forEach(resetCard);
+        };
+      });
+
+      /* REDUCED MOTION: langsung berwarna, tanpa pin */
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        cards.forEach((c) => setFlag(c, "scroll", true));
+        return () => cards.forEach(resetCard);
+      });
+
+      return () => mm.revert();
+    },
+    { scope: sectionRef },
   );
 
   return (
-    <section id="cara-kerja" aria-labelledby="cara-kerja-title">
-      {/* Desktop: horizontal storytelling */}
-      <div ref={wrap} className="relative hidden h-[260vh] lg:-my-12 lg:block">
-        <div className="sticky top-0 flex h-screen flex-col justify-center overflow-hidden">
-          <div className="mx-auto w-full max-w-6xl px-6">
-            <div id="cara-kerja-title">{header}</div>
-            <div className="relative mt-12 h-1 rounded-full bg-border">
-              <div className="absolute inset-y-0 left-0 rounded-full bg-primary transition-[width] duration-200" style={{ width: `${progress * 100}%` }} />
-              {STEPS.map((_, i) => (
-                <span key={i} className={`absolute top-1/2 h-4 w-4 -translate-y-1/2 rounded-full border-2 transition-colors ${i <= active ? "border-primary bg-primary" : "border-border bg-card"}`} style={{ left: `calc(${(i / (STEPS.length - 1)) * 100}% - 8px)` }} />
-              ))}
-            </div>
-          </div>
-          <div className="mx-auto mt-10 w-full max-w-6xl px-6">
-            <div className="flex gap-6 transition-transform duration-300 ease-out" style={{ transform: `translateX(-${progress * 30}%)` }}>
-              {STEPS.map((_, i) => (
-                <div key={i} className="w-[380px] shrink-0">
-                  <StepCard i={i} active={i === active} />
-                </div>
-              ))}
-            </div>
-          </div>
+    <section
+      ref={sectionRef}
+      id="cara-kerja"
+      aria-labelledby="cara-kerja-title"
+      className="relative py-12 lg:flex lg:h-screen lg:flex-col lg:justify-center lg:overflow-hidden lg:py-0 lg:pt-16"
+    >
+      {/* Header: sejajar dengan section Awareness */}
+      <div className="mx-auto w-full max-w-[74.5rem] px-5">
+        <p data-fade className="text-sm font-semibold tracking-[0.18em] text-burgundy">
+          CARA KERJA
+        </p>
+        <h2
+          id="cara-kerja-title"
+          ref={headRef}
+          className="mt-3 max-w-3xl text-3xl leading-[1.15] font-bold tracking-tight text-balance text-navy sm:text-4xl lg:text-5xl"
+        >
+          A simple process, a clearer understanding.
+        </h2>
+        <p data-fade className="mt-5 max-w-xl text-base leading-relaxed text-pretty text-olive sm:text-lg">
+          Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah sederhana untuk mengambil
+          gambar wajah dan memahami informasi visual yang ditampilkan FaciCheck.
+        </p>
+      </div>
+
+      {/* Track kartu */}
+      <div ref={viewportRef} className="mt-10 lg:mt-12 lg:overflow-x-auto lg:py-6">
+        <div
+          ref={trackRef}
+          className="flex flex-col gap-5 px-5 will-change-transform lg:w-max lg:flex-row lg:gap-6 lg:pr-[max(1.25rem,calc((100vw-72rem)/2))] lg:pl-[max(1.25rem,calc((100vw-72rem)/2))]"
+        >
+          {STEPS.map((s, i) => (
+            <article
+              key={s.title}
+              data-card
+              data-on="false"
+              className="group/card relative flex min-h-[19rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-muted p-7 transition-[translate,box-shadow,border-color] duration-700 ease-out data-[on=true]:border-transparent data-[on=true]:shadow-soft lg:h-[min(25rem,46vh)] lg:w-[min(34rem,46vw)] lg:shrink-0 lg:p-9 lg:data-[on=true]:-translate-y-2"
+            >
+              {/* lapisan warna, fade-in saat aktif */}
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 opacity-0 transition-opacity duration-700 ease-out group-data-[on=true]/card:opacity-100"
+                style={{ background: s.bg }}
+              />
+
+              <div className="relative z-10 flex items-start justify-between">
+                <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card/70 opacity-60 grayscale transition-[filter,opacity,background-color,transform] duration-700 ease-out group-data-[on=true]/card:scale-100 group-data-[on=true]/card:bg-card group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
+                  <StepIcon i={i} />
+                </span>
+                <span className="text-5xl font-extrabold tabular-nums text-navy/15 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/30">
+                  0{i + 1}
+                </span>
+              </div>
+
+              <div className="relative z-10 mt-auto pt-8">
+                <h3 className="text-2xl font-bold tracking-tight text-navy/45 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
+                  {s.title}
+                </h3>
+                <p className="mt-3 max-w-md text-base leading-relaxed text-olive/60 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/80">
+                  {s.text}
+                </p>
+              </div>
+            </article>
+          ))}
         </div>
       </div>
 
-      {/* Mobile/tablet: vertical timeline */}
-      <div className="mx-auto max-w-2xl px-5 py-12 lg:hidden">
-        {header}
-        <ol className="relative mt-10 space-y-6 border-l-2 border-rose/40 pl-6">
-          {STEPS.map((_, i) => (
-            <li key={i} className="relative">
-              <span className="absolute -left-[33px] top-8 h-4 w-4 rounded-full border-2 border-primary bg-card" />
-              <StepCard i={i} active />
-            </li>
-          ))}
-        </ol>
+      {/* Indikator langkah (desktop) */}
+      <div aria-hidden="true" className="mx-auto hidden w-full max-w-[74.5rem] gap-2 px-5 lg:mt-4 lg:flex">
+        {STEPS.map((s) => (
+          <span
+            key={s.title}
+            data-dash
+            data-on="false"
+            className="h-1 w-4 rounded-full bg-navy/20 transition-all duration-500 data-[on=true]:w-10 data-[on=true]:bg-burgundy"
+          />
+        ))}
       </div>
     </section>
   );
