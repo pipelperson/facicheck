@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { BookOpenCheck, ScanFace, FileText, type LucideIcon } from "lucide-react";
+import {
+  BookOpenCheck,
+  ScanFace,
+  FileText,
+  type LucideIcon,
+} from "lucide-react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SplitText } from "gsap/SplitText";
@@ -45,7 +50,10 @@ const STEPS: Step[] = [
 /* Kartu "menyala" jika salah satu flag aktif: scroll ATAU hover */
 type Flag = "scroll" | "hover";
 const sync = (el: HTMLElement) => {
-  el.dataset["on"] = el.dataset["scroll"] === "1" || el.dataset["hover"] === "1" ? "true" : "false";
+  el.dataset["on"] =
+    el.dataset["scroll"] === "1" || el.dataset["hover"] === "1"
+      ? "true"
+      : "false";
 };
 const setFlag = (el: HTMLElement, key: Flag, value: boolean) => {
   el.dataset[key] = value ? "1" : "0";
@@ -65,7 +73,14 @@ function StepIcon({ i }: { i: number }) {
     if (img && img.complete && img.naturalWidth === 0) setFailed(true);
   }, []);
   const { Fallback, icon } = STEPS[i]!;
-  if (failed) return <Fallback className="h-9 w-9 text-burgundy" strokeWidth={1.75} aria-hidden="true" />;
+  if (failed)
+    return (
+      <Fallback
+        className="h-9 w-9 text-burgundy"
+        strokeWidth={1.75}
+        aria-hidden="true"
+      />
+    );
   return (
     <img
       ref={ref}
@@ -123,90 +138,102 @@ export function HowItWorks() {
       });
 
       /* DESKTOP: pin + geser horizontal */
-      mm.add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", () => {
-        const viewport = viewportRef.current;
-        const track = trackRef.current;
-        if (!viewport || !track) return;
+      mm.add(
+        "(min-width: 1024px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const viewport = viewportRef.current;
+          const track = trackRef.current;
+          if (!viewport || !track) return;
 
-        viewport.style.overflowX = "hidden";
-        const dist = () => Math.max(0, track.scrollWidth - viewport.clientWidth);
-        const length = () => Math.max(dist() * 1.4, window.innerHeight * 1.4);
+          viewport.style.overflowX = "hidden";
+          const dist = () =>
+            Math.max(0, track.scrollWidth - viewport.clientWidth);
+          const length = () => Math.max(dist() * 1.4, window.innerHeight * 1.4);
 
-        let current = -1;
-        const apply = (idx: number) => {
-          if (idx === current) return;
-          current = idx;
-          cards.forEach((c, i) => setFlag(c, "scroll", i <= idx));
-          dashes.forEach((d, i) => {
-            d.dataset["on"] = i === idx ? "true" : "false";
-          });
-        };
-        apply(0);
-
-        gsap.from(cards, {
-          y: 48,
-          autoAlpha: 0,
-          duration: 0.9,
-          ease: "power3.out",
-          stagger: 0.12,
-          scrollTrigger: { trigger: root, start: "top 70%", once: true },
-        });
-
-        gsap.to(track, {
-          x: () => -dist(),
-          ease: "none",
-          scrollTrigger: {
-            trigger: root,
-            start: "top top",
-            end: () => `+=${length()}`,
-            pin: true,
-            scrub: 0.6,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
-            onUpdate: (self) =>
-              apply(Math.min(cards.length - 1, Math.floor(self.progress * cards.length))),
-          },
-        });
-
-        // Hover: kartu berwarna saat pointer mouse mengarah ke kartu
-        const offs = cards.map((card) => {
-          const enter = (e: PointerEvent) => {
-            if (e.pointerType === "mouse") setFlag(card, "hover", true);
+          let current = -1;
+          const apply = (idx: number) => {
+            if (idx === current) return;
+            current = idx;
+            cards.forEach((c, i) => setFlag(c, "scroll", i <= idx));
+            dashes.forEach((d, i) => {
+              d.dataset["on"] = i === idx ? "true" : "false";
+            });
           };
-          const leave = () => setFlag(card, "hover", false);
-          card.addEventListener("pointerenter", enter);
-          card.addEventListener("pointerleave", leave);
+          apply(0);
+
+          gsap.from(cards, {
+            y: 48,
+            autoAlpha: 0,
+            duration: 0.9,
+            ease: "power3.out",
+            stagger: 0.12,
+            scrollTrigger: { trigger: root, start: "top 70%", once: true },
+          });
+
+          gsap.to(track, {
+            x: () => -dist(),
+            ease: "none",
+            scrollTrigger: {
+              trigger: root,
+              start: "top top",
+              end: () => `+=${length()}`,
+              pin: true,
+              scrub: 0.6,
+              anticipatePin: 1,
+              invalidateOnRefresh: true,
+              onUpdate: (self) =>
+                apply(
+                  Math.min(
+                    cards.length - 1,
+                    Math.floor(self.progress * cards.length),
+                  ),
+                ),
+            },
+          });
+
+          // Hover: kartu berwarna saat pointer mouse mengarah ke kartu
+          const offs = cards.map((card) => {
+            const enter = (e: PointerEvent) => {
+              if (e.pointerType === "mouse") setFlag(card, "hover", true);
+            };
+            const leave = () => setFlag(card, "hover", false);
+            card.addEventListener("pointerenter", enter);
+            card.addEventListener("pointerleave", leave);
+            return () => {
+              card.removeEventListener("pointerenter", enter);
+              card.removeEventListener("pointerleave", leave);
+            };
+          });
+
           return () => {
-            card.removeEventListener("pointerenter", enter);
-            card.removeEventListener("pointerleave", leave);
+            offs.forEach((off) => off());
+            viewport.style.overflowX = "";
+            cards.forEach(resetCard);
+            dashes.forEach((d) => {
+              d.dataset["on"] = "false";
+            });
           };
-        });
-
-        return () => {
-          offs.forEach((off) => off());
-          viewport.style.overflowX = "";
-          cards.forEach(resetCard);
-          dashes.forEach((d) => {
-            d.dataset["on"] = "false";
-          });
-        };
-      });
+        },
+      );
 
       /* MOBILE/TABLET: vertikal, berwarna saat di area tengah layar */
-      mm.add("(max-width: 1023px) and (prefers-reduced-motion: no-preference)", () => {
-        const triggers = cards.map((card) =>
-          ScrollTrigger.create({
-            trigger: card,
-            start: "top 70%",
-            end: "bottom 30%",
-            onToggle: (self) => setFlag(card, "scroll", self.isActive),
-          }),
-        );
-        return () => {
-          triggers.forEach((t) => t.kill());
-          cards.forEach(resetCard);
-        };
-      });
+      mm.add(
+        "(max-width: 1023px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const triggers = cards.map((card) =>
+            ScrollTrigger.create({
+              trigger: card,
+              start: "top 70%",
+              end: "bottom 30%",
+              onToggle: (self) => setFlag(card, "scroll", self.isActive),
+            }),
+          );
+          return () => {
+            triggers.forEach((t) => t.kill());
+            cards.forEach(resetCard);
+          };
+        },
+      );
 
       /* REDUCED MOTION: langsung berwarna, tanpa pin */
       mm.add("(prefers-reduced-motion: reduce)", () => {
@@ -228,7 +255,10 @@ export function HowItWorks() {
     >
       {/* Header: sejajar dengan section Awareness */}
       <div className="mx-auto w-full max-w-[74.5rem] px-5">
-        <p data-fade className="text-sm font-semibold tracking-[0.14em] text-burgundy">
+        <p
+          data-fade
+          className="text-sm font-semibold tracking-[0.14em] text-burgundy"
+        >
           CARA KERJA
         </p>
         <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
@@ -239,15 +269,22 @@ export function HowItWorks() {
           >
             A simple process, a clearer understanding.
           </h2>
-          <p data-fade className="mt-5 max-w-md text-base leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2">
-            Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah sederhana untuk mengambil
-            gambar wajah dan memahami informasi visual yang ditampilkan FaciCheck.
+          <p
+            data-fade
+            className="mt-5 max-w-md text-base leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2"
+          >
+            Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah
+            sederhana untuk mengambil gambar wajah dan memahami informasi visual
+            yang ditampilkan FaciCheck.
           </p>
         </div>
       </div>
 
       {/* Track kartu */}
-      <div ref={viewportRef} className="mt-10 lg:mt-6 lg:overflow-x-auto lg:py-5">
+      <div
+        ref={viewportRef}
+        className="mt-10 lg:mt-6 lg:overflow-x-auto lg:py-5"
+      >
         <div
           ref={trackRef}
           className="flex flex-col gap-5 px-5 will-change-transform lg:w-max lg:flex-row lg:gap-6 lg:pr-[max(1.25rem,calc((100vw-72rem)/2))] lg:pl-[max(1.25rem,calc((100vw-72rem)/2))]"
@@ -292,7 +329,10 @@ export function HowItWorks() {
       </div>
 
       {/* Indikator langkah (desktop) */}
-      <div aria-hidden="true" className="mx-auto hidden w-full max-w-[74.5rem] gap-2 px-5 lg:mt-4 lg:flex">
+      <div
+        aria-hidden="true"
+        className="mx-auto hidden w-full max-w-[74.5rem] gap-2 px-5 lg:mt-4 lg:flex"
+      >
         {STEPS.map((s) => (
           <span
             key={s.title}

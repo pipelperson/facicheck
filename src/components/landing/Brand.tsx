@@ -28,7 +28,10 @@ export function Brand() {
       <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-card">
         {failed ? (
           // Cadangan sementara jika file logo belum ada. Bukan logo asli.
-          <span aria-hidden="true" className="font-display text-xl font-semibold text-burgundy">
+          <span
+            aria-hidden="true"
+            className="font-display text-xl font-semibold text-burgundy"
+          >
             F
           </span>
         ) : (
@@ -44,7 +47,9 @@ export function Brand() {
           />
         )}
       </span>
-      <span className="truncate text-lg font-semibold tracking-[-0.02em] text-navy">FaciCheck</span>
+      <span className="truncate text-lg font-semibold tracking-[-0.02em] text-navy">
+        FaciCheck
+      </span>
     </a>
   );
 }

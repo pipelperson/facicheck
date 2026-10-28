@@ -1,7 +1,13 @@
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/motion";
 
-const CHAPTERS = ["beranda", "tentang", "cara-kerja", "catatan", "mulai"] as const;
+const CHAPTERS = [
+  "beranda",
+  "tentang",
+  "cara-kerja",
+  "catatan",
+  "mulai",
+] as const;
 
 export function ScrollTrail() {
   const root = useRef<HTMLDivElement>(null);
@@ -9,48 +15,55 @@ export function ScrollTrail() {
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
-      mm.add("(min-width: 1280px) and (prefers-reduced-motion: no-preference)", () => {
-        const dots = gsap.utils.toArray<HTMLElement>("[data-dot]", root.current ?? undefined);
-        const secs = CHAPTERS.map((id) => document.getElementById(id));
-        if (secs.some((s) => !s)) return;
+      mm.add(
+        "(min-width: 1280px) and (prefers-reduced-motion: no-preference)",
+        () => {
+          const dots = gsap.utils.toArray<HTMLElement>(
+            "[data-dot]",
+            root.current ?? undefined,
+          );
+          const secs = CHAPTERS.map((id) => document.getElementById(id));
+          if (secs.some((s) => !s)) return;
 
-        const paint = (idx: number) =>
-          dots.forEach((d, i) => {
-            d.dataset["state"] = i < idx ? "past" : i === idx ? "current" : "next";
-          });
-        paint(0);
+          const paint = (idx: number) =>
+            dots.forEach((d, i) => {
+              d.dataset["state"] =
+                i < idx ? "past" : i === idx ? "current" : "next";
+            });
+          paint(0);
 
-        const last = CHAPTERS.length - 1;
-        for (let i = 0; i < last; i++) {
-          gsap.fromTo(
-            "[data-fill]",
-            { scaleY: i / last },
-            {
-              scaleY: (i + 1) / last,
-              ease: "none",
-              immediateRender: false,
-              scrollTrigger: {
-                trigger: secs[i]!,
-                start: "top 55%",
-                endTrigger: secs[i + 1]!,
-                end: "top 55%",
-                scrub: true,
-                refreshPriority: -1,
-                onToggle: (self) => {
-                  if (self.isActive) paint(i);
+          const last = CHAPTERS.length - 1;
+          for (let i = 0; i < last; i++) {
+            gsap.fromTo(
+              "[data-fill]",
+              { scaleY: i / last },
+              {
+                scaleY: (i + 1) / last,
+                ease: "none",
+                immediateRender: false,
+                scrollTrigger: {
+                  trigger: secs[i]!,
+                  start: "top 55%",
+                  endTrigger: secs[i + 1]!,
+                  end: "top 55%",
+                  scrub: true,
+                  refreshPriority: -1,
+                  onToggle: (self) => {
+                    if (self.isActive) paint(i);
+                  },
                 },
               },
-            },
-          );
-        }
-        ScrollTrigger.create({
-          trigger: secs[last]!,
-          start: "top 55%",
-          refreshPriority: -1,
-          onEnter: () => paint(last),
-          onLeaveBack: () => paint(last - 1),
-        });
-      });
+            );
+          }
+          ScrollTrigger.create({
+            trigger: secs[last]!,
+            start: "top 55%",
+            refreshPriority: -1,
+            onEnter: () => paint(last),
+            onLeaveBack: () => paint(last - 1),
+          });
+        },
+      );
       return () => mm.revert();
     },
     { scope: root },

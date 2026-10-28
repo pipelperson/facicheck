@@ -144,7 +144,9 @@ function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
       <div className="mt-auto pt-6">
         <h3
           className={
-            showTitle ? "mb-3 font-display text-3xl tracking-[-0.03em]" : "sr-only"
+            showTitle
+              ? "mb-3 font-display text-3xl tracking-[-0.03em]"
+              : "sr-only"
           }
         >
           {title}
@@ -276,7 +278,9 @@ export function Awareness() {
             const step = e.key === "ArrowDown" ? 1 : ITEMS.length - 1;
             const next = (active + step) % ITEMS.length;
             setActive(next);
-            e.currentTarget.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
+            e.currentTarget
+              .querySelectorAll<HTMLButtonElement>("button")
+              [next]?.focus();
           }}
         >
           {ITEMS.map((it, i) => (

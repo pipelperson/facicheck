@@ -43,7 +43,11 @@ function Index() {
       <main>
         <Hero />
 
-        <section id="tentang" aria-labelledby="tentang-title" className="px-5 py-24 lg:py-32">
+        <section
+          id="tentang"
+          aria-labelledby="tentang-title"
+          className="px-5 py-24 lg:py-32"
+        >
           <div className="mx-auto max-w-6xl">
             <Awareness />
           </div>
@@ -59,7 +63,8 @@ function Index() {
           <div>
             <Brand />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-olive">
-              Prototipe web skrining awal kemungkinan asimetri wajah melalui analisis visual.
+              Prototipe web skrining awal kemungkinan asimetri wajah melalui
+              analisis visual.
             </p>
             <p className="mt-4 inline-block rounded-md bg-sage/25 px-2.5 py-1 text-xs font-semibold text-olive">
               Prototipe Akademik
@@ -70,7 +75,10 @@ function Index() {
             <ul className="mt-4 space-y-2">
               {NAV_LINKS.map((l) => (
                 <li key={l.href}>
-                  <a href={l.href} className="text-sm text-olive hover:text-burgundy">
+                  <a
+                    href={l.href}
+                    className="text-sm text-olive hover:text-burgundy"
+                  >
                     {l.label}
                   </a>
                 </li>
@@ -79,7 +87,8 @@ function Index() {
           </nav>
           <p className="text-sm leading-relaxed text-olive">
             <span className="font-semibold text-navy">Disclaimer: </span>
-            FaciCheck bukan alat diagnosis medis dan tidak menggantikan pemeriksaan tenaga kesehatan profesional.
+            FaciCheck bukan alat diagnosis medis dan tidak menggantikan
+            pemeriksaan tenaga kesehatan profesional.
           </p>
         </div>
         <p className="mx-auto mt-10 max-w-6xl text-xs text-olive">

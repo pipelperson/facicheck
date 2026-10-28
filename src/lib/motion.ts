@@ -12,7 +12,10 @@ export { gsap, ScrollTrigger, SplitText, useGSAP };
 type RevealOpts = { scroll?: boolean; start?: string; delay?: number };
 
 /** Headline muncul per baris (mask). scroll:false = langsung jalan (untuk hero). */
-export function revealLines(el: HTMLElement, { scroll = true, start = "top 88%", delay = 0 }: RevealOpts = {}) {
+export function revealLines(
+  el: HTMLElement,
+  { scroll = true, start = "top 88%", delay = 0 }: RevealOpts = {},
+) {
   return SplitText.create(el, {
     type: "lines",
     mask: "lines",
@@ -25,7 +28,9 @@ export function revealLines(el: HTMLElement, { scroll = true, start = "top 88%",
         ease: "power4.out",
         stagger: 0.12,
         delay,
-        ...(scroll ? { scrollTrigger: { trigger: el, start, once: true } } : {}),
+        ...(scroll
+          ? { scrollTrigger: { trigger: el, start, once: true } }
+          : {}),
       } satisfies gsap.TweenVars;
 
       return gsap.from(self.lines, tweenVars);

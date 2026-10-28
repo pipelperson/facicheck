@@ -11,9 +11,16 @@ export const NAV_LINKS = [
 
 // "mulai" ikut dipantau supaya saat di penutup tidak ada link yang menyala keliru
 const TRACKED_IDS = [...NAV_LINKS.map((l) => l.href.slice(1)), "mulai"];
-const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const focus =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-export function CtaButton({ children = "Mulai Skrining", className = "" }: { children?: React.ReactNode; className?: string }) {
+export function CtaButton({
+  children = "Mulai Skrining",
+  className = "",
+}: {
+  children?: React.ReactNode;
+  className?: string;
+}) {
   return (
     <a
       href="#mulai"
@@ -32,11 +39,14 @@ export function Navbar() {
   const lockUntil = useRef(0);
 
   useEffect(() => {
-    const els = TRACKED_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
+    const els = TRACKED_IDS.map((id) => document.getElementById(id)).filter(
+      (el): el is HTMLElement => el !== null,
+    );
     const io = new IntersectionObserver(
       (entries) => {
         if (Date.now() < lockUntil.current) return;
-        for (const e of entries) if (e.isIntersecting) setCurrent(`#${e.target.id}`);
+        for (const e of entries)
+          if (e.isIntersecting) setCurrent(`#${e.target.id}`);
       },
       { rootMargin: "-40% 0px -55% 0px" },
     );
@@ -52,7 +62,10 @@ export function Navbar() {
 
   return (
     <header className="fixed inset-x-0 top-4 z-50 px-4">
-      <nav aria-label="Navigasi utama" className="glass mx-auto max-w-6xl rounded-2xl px-4 py-2.5">
+      <nav
+        aria-label="Navigasi utama"
+        className="glass mx-auto max-w-6xl rounded-2xl px-4 py-2.5"
+      >
         <div className="flex items-center justify-between gap-4">
           <Brand />
           <ul className="hidden items-center gap-1 md:flex">
@@ -91,7 +104,10 @@ export function Navbar() {
           </button>
         </div>
         {open && (
-          <ul id="mobile-menu" className="mt-3 flex flex-col gap-1 border-t border-border/60 pt-3 md:hidden">
+          <ul
+            id="mobile-menu"
+            className="mt-3 flex flex-col gap-1 border-t border-border/60 pt-3 md:hidden"
+          >
             {NAV_LINKS.map((l) => {
               const isActive = current === l.href;
               return (
@@ -101,7 +117,9 @@ export function Navbar() {
                     onClick={() => go(l.href)}
                     aria-current={isActive ? "location" : undefined}
                     className={`block rounded-lg px-3 py-3 text-base font-medium transition-colors ${focus} ${
-                      isActive ? "bg-accent font-semibold text-burgundy" : "text-navy hover:bg-card/70"
+                      isActive
+                        ? "bg-accent font-semibold text-burgundy"
+                        : "text-navy hover:bg-card/70"
                     }`}
                   >
                     {l.label}

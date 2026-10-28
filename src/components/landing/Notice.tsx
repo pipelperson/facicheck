@@ -27,7 +27,12 @@ export function Notice() {
                   ease: "none",
                   stagger: 0.12,
                   duration: 0.6,
-                  scrollTrigger: { trigger: statement.current, start: "top 82%", end: "bottom 50%", scrub: true },
+                  scrollTrigger: {
+                    trigger: statement.current,
+                    start: "top 82%",
+                    end: "bottom 50%",
+                    scrub: true,
+                  },
                 },
               ),
           });
@@ -39,7 +44,12 @@ export function Notice() {
   );
 
   return (
-    <section ref={root} id="catatan" aria-labelledby="disclaimer-title" className="px-5 py-24 lg:py-32">
+    <section
+      ref={root}
+      id="catatan"
+      aria-labelledby="disclaimer-title"
+      className="px-5 py-24 lg:py-32"
+    >
       <Reveal className="mx-auto max-w-5xl">
         <div className="rounded-[2rem] border border-rose/40 bg-card/90 p-8 sm:p-12 lg:p-16">
           <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-burgundy">
@@ -59,12 +69,14 @@ export function Notice() {
             className="mt-6 max-w-3xl text-xl leading-snug font-medium tracking-[-0.01em] text-navy sm:text-2xl lg:text-[1.75rem]"
           >
             FaciCheck merupakan prototipe untuk skrining awal,{" "}
-            <span className="text-burgundy">bukan alat untuk mendiagnosis kondisi medis.</span>
+            <span className="text-burgundy">
+              bukan alat untuk mendiagnosis kondisi medis.
+            </span>
           </p>
 
           <p className="mt-8 max-w-2xl border-t border-border pt-6 text-base leading-relaxed text-olive sm:text-lg">
-            Jika Anda mengalami perubahan wajah secara tiba-tiba atau gejala lain yang mengkhawatirkan, segera cari bantuan
-            medis profesional.
+            Jika Anda mengalami perubahan wajah secara tiba-tiba atau gejala
+            lain yang mengkhawatirkan, segera cari bantuan medis profesional.
           </p>
         </div>
       </Reveal>

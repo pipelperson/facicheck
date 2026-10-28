@@ -6,7 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 export function SmoothScroll() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
 
     const lenis = reduce ? null : new Lenis({ lerp: 0.1, smoothWheel: true });
     let tick: ((time: number) => void) | null = null;
@@ -18,7 +20,9 @@ export function SmoothScroll() {
     }
 
     const onClick = (e: MouseEvent) => {
-      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[href^="#"]');
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>(
+        'a[href^="#"]',
+      );
       if (!a) return;
       const id = a.getAttribute("href")!.slice(1);
       const el = id ? document.getElementById(id) : null;
@@ -27,7 +31,9 @@ export function SmoothScroll() {
 
       // Section yang di-pin dibungkus .pin-spacer: scroll ke pembungkusnya
       // supaya selalu mendarat di awal pin, dari arah mana pun.
-      const spacer = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : null;
+      const spacer = el.parentElement?.classList.contains("pin-spacer")
+        ? el.parentElement
+        : null;
       const target = spacer ?? el;
       const offset = spacer ? 0 : -96;
 
