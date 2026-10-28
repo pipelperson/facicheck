@@ -76,7 +76,7 @@ function StepIcon({ i }: { i: number }) {
   if (failed)
     return (
       <Fallback
-        className="h-9 w-9 text-burgundy"
+        className="h-10 w-10 text-burgundy"
         strokeWidth={1.75}
         aria-hidden="true"
       />
@@ -86,11 +86,11 @@ function StepIcon({ i }: { i: number }) {
       ref={ref}
       src={icon}
       alt=""
-      width={72}
-      height={72}
+      width={80}
+      height={80}
       decoding="async"
       onError={() => setFailed(true)}
-      className="h-[4.5rem] w-[4.5rem] object-contain"
+      className="h-20 w-20 object-contain"
     />
   );
 }
@@ -271,7 +271,7 @@ export function HowItWorks() {
           </h2>
           <p
             data-fade
-            className="mt-5 max-w-md text-base leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2"
+            className="mt-5 max-w-md text-lg leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2"
           >
             Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah
             sederhana untuk mengambil gambar wajah dan memahami informasi visual
@@ -294,7 +294,7 @@ export function HowItWorks() {
               key={s.title}
               data-card
               data-on="false"
-              className="group/card relative flex min-h-[19rem] flex-col overflow-hidden rounded-[2rem] border border-border bg-muted p-7 transition-[translate,box-shadow,border-color] duration-700 ease-out data-[on=true]:border-transparent data-[on=true]:shadow-soft lg:h-[clamp(15rem,42vh,25rem)] lg:w-[min(34rem,46vw)] lg:shrink-0 lg:p-9 lg:data-[on=true]:-translate-y-2"
+              className="group/card relative flex flex-col overflow-hidden rounded-[2rem] border border-border bg-muted p-7 transition-[translate,box-shadow,border-color] duration-700 ease-out data-[on=true]:border-transparent data-[on=true]:shadow-soft lg:h-[clamp(17rem,42vh,24rem)] lg:w-[min(34rem,46vw)] lg:shrink-0 lg:p-9 lg:data-[on=true]:-translate-y-2"
             >
               {/* lapisan warna, fade-in saat aktif */}
               <div
@@ -303,19 +303,15 @@ export function HowItWorks() {
                 style={{ background: s.bg }}
               />
 
-              <div className="relative z-10 flex items-start justify-between">
-                <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card/70 opacity-60 grayscale transition-[filter,opacity,background-color] duration-700 ease-out group-data-[on=true]/card:bg-cream group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
+              {/* Ikon di atas */}
+              <div className="relative z-10 flex items-center">
+                <div className="flex h-20 w-20 items-center justify-center opacity-60 grayscale transition-[filter,opacity] duration-700 ease-out group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
                   <StepIcon i={i} />
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="font-display text-6xl tracking-[-0.04em] tabular-nums text-navy/20 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/35"
-                >
-                  0{i + 1}
-                </span>
+                </div>
               </div>
 
-              <div className="relative z-10 mt-auto pt-8">
+              {/* Teks judul & deskripsi dengan jarak tetap dari ikon */}
+              <div className="relative z-10 mt-6 lg:mt-8">
                 <h3 className="font-display text-3xl tracking-[-0.03em] text-navy/60 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
                   {s.title}
                 </h3>

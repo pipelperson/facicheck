@@ -102,12 +102,6 @@ export function Hero() {
       <div className="relative mx-auto grid w-full max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-16">
         {/* KIRI: pesan utama */}
         <div>
-          <p
-            data-in="text"
-            className="inline-block rounded-full bg-accent px-4 py-1.5 text-xs font-semibold tracking-[0.14em] text-burgundy opacity-0"
-          >
-            SKRINING AWAL WAJAH
-          </p>
           <h1
             ref={h1}
             className="invisible mt-6 font-display text-[clamp(2.5rem,min(5.2vw,8.5vh),4.25rem)] leading-[1.05] tracking-[-0.035em] text-balance text-navy"
@@ -179,18 +173,6 @@ export function Hero() {
           </div>
         </div>
       </div>
-
-      {/* Isyarat gulir: hanya di layar yang cukup tinggi */}
-      <a
-        href="#tentang"
-        aria-label="Gulir ke bawah"
-        className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-2 text-[0.7rem] font-medium tracking-[0.16em] text-olive/70 [@media(min-height:760px)]:flex"
-      >
-        GULIR
-        <span className="relative block h-10 w-px overflow-hidden bg-navy/15">
-          <span className="absolute inset-x-0 top-0 block h-1/2 animate-cue bg-burgundy" />
-        </span>
-      </a>
     </section>
   );
 }

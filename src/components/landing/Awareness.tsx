@@ -118,7 +118,7 @@ function CardIcon({ i }: { i: number }) {
       loading="lazy"
       decoding="async"
       onError={() => setFailed(true)}
-      className="h-[4.5rem] w-[4.5rem] object-contain"
+      className="h-24 w-24 object-contain"
     />
   );
 }
@@ -127,31 +127,33 @@ function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
   const { title, text } = ITEMS[i]!;
   return (
     <div
-      className="flex h-full flex-col rounded-[2rem] p-7 text-primary-foreground"
+      className="flex h-full flex-col rounded-[2rem] p-8 text-primary-foreground"
       style={{
         background: THEMES.burgundy.bg,
         boxShadow: THEMES.burgundy.shadow,
       }}
     >
-      <div className="flex items-start justify-between">
-        <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-cream">
+      {/* 1. Ikon di atas tanpa kotak bingkai */}
+      <div className="flex items-center">
+        <div className="flex h-28 w-28 items-center justify-center">
           <CardIcon i={i} />
-        </span>
-        <span className="text-sm font-semibold tabular-nums text-primary-foreground/70">
-          0{i + 1} / 03
-        </span>
+        </div>
       </div>
-      <div className="mt-auto pt-6">
+
+      {/* 2. Judul/Teks utama langsung di bawah ikon (menggantikan posisi nomor) */}
+      <div className="mt-6">
         <h3
           className={
             showTitle
-              ? "mb-3 font-display text-3xl tracking-[-0.03em]"
+              ? "font-display text-3xl tracking-[-0.03em]"
               : "sr-only"
           }
         >
           {title}
         </h3>
-        <p className="text-base leading-relaxed text-primary-foreground/85">
+        
+        {/* 3. Paragraf deskripsi di bawah judul */}
+        <p className="mt-3 text-base leading-relaxed text-primary-foreground/85">
           {text}
         </p>
       </div>

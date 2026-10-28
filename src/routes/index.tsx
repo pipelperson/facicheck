@@ -5,7 +5,6 @@ import { Hero } from "@/components/landing/Hero";
 import { HowItWorks } from "@/components/landing/HowItWorks";
 import { Notice } from "@/components/landing/Notice";
 import { FinalCta } from "@/components/landing/FinalCta";
-import { ScrollTrail } from "@/components/landing/ScrollTrail";
 import { Brand } from "@/components/landing/Brand";
 import { Backdrop } from "@/components/landing/Backdrop";
 import { Waves } from "@/components/landing/Waves";
@@ -87,10 +86,7 @@ function Index() {
         <p className="mx-auto mt-10 max-w-6xl text-xs text-navy">
           © {new Date().getFullYear()} FaciCheck. Prototipe akademik.
         </p>
-      </footer>
-
-      {/* Taruh paling akhir: trigger-nya harus dihitung setelah semua section & pin */}
-      <ScrollTrail />
+      </footer>    
     </div>
   );
 }
