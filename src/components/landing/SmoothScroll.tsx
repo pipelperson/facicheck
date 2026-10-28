@@ -24,13 +24,27 @@ export function SmoothScroll() {
       const el = id ? document.getElementById(id) : null;
       if (!el) return;
       e.preventDefault();
-      if (lenis) lenis.scrollTo(el, { offset: -96, duration: 1.2 });
-      else el.scrollIntoView();
+
+      // Section yang di-pin dibungkus .pin-spacer: scroll ke pembungkusnya
+      // supaya selalu mendarat di awal pin, dari arah mana pun.
+      const spacer = el.parentElement?.classList.contains("pin-spacer") ? el.parentElement : null;
+      const target = spacer ?? el;
+      const offset = spacer ? 0 : -96;
+
+      if (lenis) lenis.scrollTo(target, { offset, duration: 1.2 });
+      else target.scrollIntoView();
       history.replaceState(null, "", `#${id}`);
     };
     document.addEventListener("click", onClick);
 
+    // Font web bisa mengubah tinggi teks → hitung ulang posisi trigger
+    let cancelled = false;
+    document.fonts?.ready.then(() => {
+      if (!cancelled) ScrollTrigger.refresh();
+    });
+
     return () => {
+      cancelled = true;
       document.removeEventListener("click", onClick);
       if (tick) gsap.ticker.remove(tick);
       lenis?.destroy();

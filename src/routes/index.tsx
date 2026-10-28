@@ -28,12 +28,22 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="min-h-screen overflow-x-clip bg-background">
+    <div className="relative isolate min-h-screen overflow-x-clip bg-background">
+      {/* Lapisan background gradient lembut */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[130svh]"
+        style={{
+          background:
+            "radial-gradient(60% 45% at 88% 6%, color-mix(in oklab, var(--rose) 24%, transparent), transparent 70%), radial-gradient(45% 40% at 2% 24%, color-mix(in oklab, var(--sage) 18%, transparent), transparent 70%), radial-gradient(50% 35% at 62% 72%, color-mix(in oklab, var(--skin) 26%, transparent), transparent 70%)",
+        }}
+      />
+
       <Navbar />
       <main>
         <Hero />
 
-        <section id="tentang" aria-labelledby="tentang-title" className="px-5 py-24 lg:py-28">
+        <section id="tentang" aria-labelledby="tentang-title" className="px-5 py-24 lg:py-32">
           <div className="mx-auto max-w-6xl">
             <Awareness />
           </div>

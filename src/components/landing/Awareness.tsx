@@ -99,11 +99,6 @@ const ICONS = [
 ];
 const TILT = [2.5, -2.5, 0]; // kanan, kiri, lurus
 
-// const CARD_BG =
-//   "radial-gradient(120% 80% at 100% 100%, color-mix(in oklab, var(--rose) 30%, transparent), transparent 60%), linear-gradient(165deg, color-mix(in oklab, var(--rose) 14%, white) 0%, color-mix(in oklab, var(--rose) 26%, white) 100%)";
-// const CARD_BORDER = "1px solid color-mix(in oklab, var(--rose) 35%, transparent)";
-// const CARD_SHADOW = "0 24px 40px -28px color-mix(in oklab, var(--burgundy) 45%, transparent)";
-
 function CardIcon({ i }: { i: number }) {
   const [failed, setFailed] = useState(false);
   const ref = useRef<HTMLImageElement>(null);
@@ -132,14 +127,14 @@ function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
   const { title, text } = ITEMS[i]!;
   return (
     <div
-      className="flex h-full flex-col rounded-[1.75rem] p-7 text-primary-foreground"
+      className="flex h-full flex-col rounded-[2rem] p-7 text-primary-foreground"
       style={{
         background: THEMES.burgundy.bg,
         boxShadow: THEMES.burgundy.shadow,
       }}
     >
       <div className="flex items-start justify-between">
-        <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card">
+        <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-cream">
           <CardIcon i={i} />
         </span>
         <span className="text-sm font-semibold tabular-nums text-primary-foreground/70">
@@ -149,7 +144,7 @@ function CardBody({ i, showTitle }: { i: number; showTitle: boolean }) {
       <div className="mt-auto pt-6">
         <h3
           className={
-            showTitle ? "mb-3 font-display text-3xl tracking-tight" : "sr-only"
+            showTitle ? "mb-3 font-display text-3xl tracking-[-0.03em]" : "sr-only"
           }
         >
           {title}
@@ -266,14 +261,24 @@ export function Awareness() {
         <h2
           id="tentang-title"
           ref={headline}
-          className="max-w-xl font-display text-4xl leading-[1.1] tracking-tight text-balance text-navy sm:text-5xl"
+          className="max-w-xl font-display text-[2rem] leading-[1.12] tracking-[-0.03em] text-balance text-navy sm:text-4xl lg:text-[2.75rem]"
         >
-          A little more <em className="text-burgundy">awareness</em> can make a
-          difference.
+          A little more awareness can make a difference.
         </h2>
 
         {/* Desktop: daftar sub-headline */}
-        <ol className="mt-8 hidden lg:block">
+        <ol
+          aria-label="Topik kesadaran"
+          className="mt-8 hidden lg:block"
+          onKeyDown={(e) => {
+            if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+            e.preventDefault();
+            const step = e.key === "ArrowDown" ? 1 : ITEMS.length - 1;
+            const next = (active + step) % ITEMS.length;
+            setActive(next);
+            e.currentTarget.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
+          }}
+        >
           {ITEMS.map((it, i) => (
             <li
               key={it.title}
@@ -286,18 +291,18 @@ export function Awareness() {
                 type="button"
                 onClick={() => setActive(i)}
                 onFocus={() => setActive(i)}
-                onPointerMove={(e) => {
+                onPointerEnter={(e) => {
                   if (e.pointerType === "mouse") setActive(i);
                 }}
                 aria-current={active === i}
-                className={`flex w-full items-baseline gap-5 py-3 text-left transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${
+                className={`flex w-full items-baseline gap-5 py-3 text-left touch-manipulation transition-colors duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring ${
                   active === i ? "text-burgundy" : "text-navy"
                 }`}
               >
                 <span className="w-7 shrink-0 text-sm font-semibold tabular-nums">
                   0{i + 1}
                 </span>
-                <span className="font-display text-4xl tracking-tight xl:text-5xl">
+                <span className="font-display text-3xl tracking-[-0.025em] xl:text-4xl">
                   {it.title}
                 </span>
               </button>

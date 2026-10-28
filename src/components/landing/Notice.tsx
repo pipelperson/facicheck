@@ -14,6 +14,7 @@ export function Notice() {
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         if (title.current) revealLines(title.current);
         if (statement.current) {
+          // Kalimat inti menyala kata demi kata mengikuti scroll
           SplitText.create(statement.current, {
             type: "words",
             autoSplit: true,
@@ -40,25 +41,30 @@ export function Notice() {
   return (
     <section ref={root} id="catatan" aria-labelledby="disclaimer-title" className="px-5 py-24 lg:py-32">
       <Reveal className="mx-auto max-w-5xl">
-        <div className="rounded-[2rem] border border-rose/40 bg-card p-8 sm:p-12 lg:p-16">
-          <div className="flex items-center gap-4">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-burgundy">
-              <ShieldAlert className="h-6 w-6" />
-            </span>
-            <p className="text-sm font-semibold tracking-[0.18em] text-burgundy">CATATAN PENTING</p>
-          </div>
+        <div className="rounded-[2rem] border border-rose/40 bg-card/90 p-8 sm:p-12 lg:p-16">
+          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-burgundy">
+            <ShieldAlert className="h-6 w-6" aria-hidden="true" />
+          </span>
 
-          <h2 id="disclaimer-title" ref={title} className="mt-8 font-display text-4xl tracking-tight text-navy sm:text-5xl lg:text-6xl">
-            Satu hal yang perlu <em className="text-burgundy">diingat.</em>
+          <h2
+            id="disclaimer-title"
+            ref={title}
+            className="mt-8 font-display text-4xl leading-[1.05] tracking-[-0.035em] text-navy sm:text-5xl lg:text-[3.5rem]"
+          >
+            Satu hal yang perlu diingat.
           </h2>
 
-          <p ref={statement} className="mt-6 max-w-3xl text-xl leading-snug font-medium text-navy sm:text-2xl lg:text-3xl">
+          <p
+            ref={statement}
+            className="mt-6 max-w-3xl text-xl leading-snug font-medium tracking-[-0.01em] text-navy sm:text-2xl lg:text-[1.75rem]"
+          >
             FaciCheck merupakan prototipe untuk skrining awal,{" "}
             <span className="text-burgundy">bukan alat untuk mendiagnosis kondisi medis.</span>
           </p>
 
           <p className="mt-8 max-w-2xl border-t border-border pt-6 text-base leading-relaxed text-olive sm:text-lg">
-            Jika Anda mengalami perubahan wajah secara tiba-tiba atau gejala lain yang mengkhawatirkan, segera cari bantuan medis profesional.
+            Jika Anda mengalami perubahan wajah secara tiba-tiba atau gejala lain yang mengkhawatirkan, segera cari bantuan
+            medis profesional.
           </p>
         </div>
       </Reveal>

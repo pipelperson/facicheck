@@ -6,22 +6,25 @@ export const NAV_LINKS = [
   { href: "#beranda", label: "Beranda" },
   { href: "#tentang", label: "Tentang" },
   { href: "#cara-kerja", label: "Cara Kerja" },
+  { href: "#catatan", label: "Catatan" },
 ];
 
+// "mulai" ikut dipantau supaya saat di penutup tidak ada link yang menyala keliru
+const TRACKED_IDS = [...NAV_LINKS.map((l) => l.href.slice(1)), "mulai"];
 const focus = "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
 export function CtaButton({ children = "Mulai Skrining", className = "" }: { children?: React.ReactNode; className?: string }) {
   return (
     <a
       href="#mulai"
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-cta transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97] ${focus} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-cta transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97] ${focus} ${className}`}
     >
       {children}
     </a>
   );
 }
 
-const linkBase = `relative inline-block rounded-lg px-4 py-2 text-sm font-medium transition-colors duration-200 active:scale-[0.97] after:absolute after:inset-x-4 after:bottom-1.5 after:h-0.5 after:origin-left after:rounded-full after:transition-transform after:duration-300 ${focus}`;
+const linkBase = `relative inline-block rounded-lg px-3 py-2 text-sm font-medium transition-colors duration-200 active:scale-[0.97] lg:px-4 after:absolute after:inset-x-3 after:bottom-1.5 after:h-0.5 after:origin-left after:rounded-full after:transition-transform after:duration-300 lg:after:inset-x-4 ${focus}`;
 
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -29,7 +32,7 @@ export function Navbar() {
   const lockUntil = useRef(0);
 
   useEffect(() => {
-    const els = NAV_LINKS.map((l) => document.getElementById(l.href.slice(1))).filter((el): el is HTMLElement => el !== null);
+    const els = TRACKED_IDS.map((id) => document.getElementById(id)).filter((el): el is HTMLElement => el !== null);
     const io = new IntersectionObserver(
       (entries) => {
         if (Date.now() < lockUntil.current) return;

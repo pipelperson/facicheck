@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { gsap, useGSAP } from "@/lib/motion";
+
 const points: [number, number, number][] = [
   [150, 150, 0], [190, 145, 0.4], [250, 145, 0.8], [290, 150, 1.2],
   [165, 178, 0.2], [205, 178, 0.6], [235, 178, 1], [275, 178, 1.4],
@@ -5,8 +8,31 @@ const points: [number, number, number][] = [
 ];
 
 export function FaceIllustration() {
+  const root = useRef<HTMLDivElement>(null);
+
+  // Intro: landmark muncul satu per satu → jaring tergambar → penunjuk → chip
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        const tl = gsap.timeline({ delay: 0.9, defaults: { ease: "power2.out" } });
+        tl.fromTo(
+          "[data-lm]",
+          { scale: 0, autoAlpha: 0, transformOrigin: "50% 50%" },
+          { scale: 1, autoAlpha: 1, duration: 0.5, stagger: 0.09 },
+          0,
+        )
+          .fromTo('[data-draw="mesh"]', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.2, ease: "power1.inOut" }, 0.6)
+          .fromTo('[data-draw="pointer"]', { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.5 }, 1.5)
+          .fromTo("[data-chip]", { y: 8, autoAlpha: 0 }, { y: 0, autoAlpha: 1, duration: 0.6 }, 1.8);
+      });
+      return () => mm.revert();
+    },
+    { scope: root },
+  );
+
   return (
-    <div className="relative isolate mx-auto w-full max-w-xl" aria-hidden="true">
+    <div ref={root} className="relative isolate mx-auto w-full max-w-xl" aria-hidden="true">
       <div
         className="pointer-events-none absolute -top-6 right-[14%] -z-10 h-72 w-72 rounded-full"
         style={{ background: "radial-gradient(closest-side, color-mix(in oklab, var(--rose) 38%, transparent), transparent)" }}
@@ -56,13 +82,29 @@ export function FaceIllustration() {
         <path d="M220 190 L212 232 Q220 238 228 232" fill="none" stroke="var(--navy)" strokeWidth="2.5" strokeLinecap="round" />
         {/* mouth (neutral) */}
         <path d="M195 268 Q220 278 245 268" fill="none" stroke="var(--navy)" strokeWidth="2.5" strokeLinecap="round" />
-        {/* landmark mesh */}
-        <polyline points="150,150 165,178 195,268 220,274 245,268 275,178 290,150" fill="none" stroke="var(--rose)" strokeOpacity=".5" strokeWidth="1" />
+
+        {/* landmark mesh (path + pathLength agar bisa "digambar" di semua browser) */}
+        <path
+          data-draw="mesh"
+          d="M150 150L165 178L195 268L220 274L245 268L275 178L290 150"
+          pathLength={1}
+          strokeDasharray="1"
+          fill="none" stroke="var(--rose)" strokeOpacity=".5" strokeWidth="1"
+        />
         {/* garis penunjuk dari alis kanan ke label */}
-        <line x1="290" y1="150" x2="314" y2="82" stroke="var(--rose)" strokeWidth="1.2" strokeOpacity=".8" />
+        <path
+          data-draw="pointer"
+          d="M290 150L314 82"
+          pathLength={1}
+          strokeDasharray="1"
+          fill="none" stroke="var(--rose)" strokeWidth="1.2" strokeOpacity=".8"
+        />
         {points.map(([x, y, d], i) => (
-          <circle key={i} cx={x} cy={y} r="4" fill="var(--burgundy)" className="animate-pulse-dot" style={{ animationDelay: `${d}s` }} />
+          <g key={i} data-lm>
+            <circle cx={x} cy={y} r="4" fill="var(--burgundy)" className="animate-pulse-dot" style={{ animationDelay: `${d}s` }} />
+          </g>
         ))}
+
         {/* scan line */}
         <g clipPath="url(#faceClip)">
           <g className="animate-scan">
@@ -72,7 +114,10 @@ export function FaceIllustration() {
         </g>
       </svg>
 
-      <div className="absolute top-[12.2%] left-[73.5%] -translate-y-1/2 whitespace-nowrap rounded-xl border border-white/70 bg-card/90 px-2.5 py-1.5 shadow-soft sm:px-3.5 sm:py-2">
+      <div
+        data-chip
+        className="absolute top-[12.2%] left-[73.5%] -translate-y-1/2 whitespace-nowrap rounded-xl border border-white/70 bg-card/90 px-2.5 py-1.5 shadow-soft sm:px-3.5 sm:py-2"
+      >
         <p className="text-[11px] font-semibold text-navy sm:text-sm">Analisis Visual</p>
         <p className="text-[10px] text-olive sm:text-xs">Simetri wajah</p>
       </div>

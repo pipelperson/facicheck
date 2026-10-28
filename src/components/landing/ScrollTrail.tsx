@@ -16,7 +16,7 @@ export function ScrollTrail() {
 
         const paint = (idx: number) =>
           dots.forEach((d, i) => {
-            d.dataset.state = i < idx ? "past" : i === idx ? "current" : "next";
+            d.dataset["state"] = i < idx ? "past" : i === idx ? "current" : "next";
           });
         paint(0);
 

@@ -1,23 +1,21 @@
-@import "tailwindcss" source(none);
+@import "tailwindcss";
 @source "../src";
 @import "tw-animate-css";
-@import "@fontsource/instrument-serif/400.css";
-@import "@fontsource/instrument-serif/400-italic.css";
 
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+- Design system definition.
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
+- The @theme inline block maps CSS custom properties to Tailwind utility
+- classes (e.g. --color-primary -> bg-primary, text-primary).
  *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+- The :root and .dark blocks define the actual color values using oklch.
+- All colors MUST use oklch format.
  *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+- To add a new semantic color:
+- Add the variable to :root (light value) and .dark (dark value)
+- 2. Register it in @theme inline as --color-<name>: var(--<name>)
  */
 
 @theme inline {
@@ -66,21 +64,25 @@
   --color-navy: var(--navy);
   --color-sage: var(--sage);
   --color-olive: var(--olive);
+  --color-cream: var(--cream);
+  --color-skin: var(--skin);
   --color-glass: var(--glass);
   --color-glass-border: var(--glass-border);
-  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Instrument Serif", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "DM Sans", ui-sans-serif, system-ui, sans-serif;
   --shadow-soft: var(--shadow-soft);
   --shadow-cta: var(--shadow-cta);
 }
 
 :root {
   --radius: 1rem;
-  --burgundy: oklch(0.5 0.09 10);
-  --rose: oklch(0.7 0.045 15);
-  --navy: oklch(0.38 0.045 260);
-  --sage: oklch(0.71 0.06 110);
-  --olive: oklch(0.48 0.03 125);
+  --burgundy: oklch(0.507 0.094 13);   /* #934D56 */
+  --rose: oklch(0.708 0.042 20);       /* #BA9796 */
+  --navy: oklch(0.384 0.044 259);      /* #35445B */
+  --sage: oklch(0.71 0.054 110);       /* #A3A57E */
+  --olive: oklch(0.503 0.026 127);     /* #606757 */
+  --cream: oklch(0.958 0.012 75);      /* #F6F0E8 */
+  --skin: oklch(0.846 0.049 51);       /* #E8C4B0 */
   --background: oklch(0.969 0.006 85);
   --foreground: var(--navy);
   --card: oklch(1 0 0);
@@ -88,9 +90,9 @@
   --popover: oklch(1 0 0);
   --popover-foreground: var(--navy);
   --primary: var(--burgundy);
-  --primary-foreground: oklch(0.99 0.003 85);
+  --primary-foreground: var(--cream);
   --secondary: var(--navy);
-  --secondary-foreground: oklch(0.99 0.003 85);
+  --secondary-foreground: var(--cream);
   --muted: oklch(0.94 0.01 85);
   --muted-foreground: var(--olive);
   --accent: oklch(0.93 0.02 15);
@@ -160,4 +162,3 @@ html.lenis, html.lenis body { height: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
-

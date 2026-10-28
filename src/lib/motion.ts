@@ -19,14 +19,16 @@ export function revealLines(el: HTMLElement, { scroll = true, start = "top 88%",
     autoSplit: true,
     onSplit: (self) => {
       gsap.set(el, { visibility: "visible" });
-      return gsap.from(self.lines, {
+      const tweenVars = {
         yPercent: 110,
         duration: 1,
         ease: "power4.out",
         stagger: 0.12,
         delay,
-        scrollTrigger: scroll ? { trigger: el, start, once: true } : undefined,
-      });
+        ...(scroll ? { scrollTrigger: { trigger: el, start, once: true } } : {}),
+      } satisfies gsap.TweenVars;
+
+      return gsap.from(self.lines, tweenVars);
     },
   });
 }

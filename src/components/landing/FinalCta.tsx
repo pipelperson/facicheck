@@ -75,20 +75,20 @@ export function FinalCta() {
           </g>
         </svg>
 
-        <div className="relative z-10 max-w-2xl">
+        <div className="relative z-10 max-w-3xl">
           <h2
             id="mulai-title"
             ref={title}
-            className="font-display text-5xl leading-[1.05] tracking-tight text-secondary-foreground sm:text-6xl"
+            className="font-display text-4xl leading-[1.05] tracking-[-0.035em] text-secondary-foreground sm:text-5xl lg:text-6xl"
           >
-            Siap melihat <em className="text-rose">lebih dekat?</em>
+            Siap melihat lebih dekat?
           </h2>
           <p data-cta className="mt-5 text-lg text-secondary-foreground/80">
             Mulai dengan satu langkah sederhana.
           </p>
           <div data-cta className="mt-9">
             <CtaButton className="px-8 py-4 text-base">
-              Mulai Skrining <ArrowRight className="h-5 w-5" />
+              Mulai Skrining <ArrowRight className="h-5 w-5" aria-hidden="true" />
             </CtaButton>
           </div>
         </div>

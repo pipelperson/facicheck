@@ -45,15 +45,15 @@ const STEPS: Step[] = [
 /* Kartu "menyala" jika salah satu flag aktif: scroll ATAU hover */
 type Flag = "scroll" | "hover";
 const sync = (el: HTMLElement) => {
-  el.dataset.on = el.dataset.scroll === "1" || el.dataset.hover === "1" ? "true" : "false";
+  el.dataset["on"] = el.dataset["scroll"] === "1" || el.dataset["hover"] === "1" ? "true" : "false";
 };
 const setFlag = (el: HTMLElement, key: Flag, value: boolean) => {
   el.dataset[key] = value ? "1" : "0";
   sync(el);
 };
 const resetCard = (el: HTMLElement) => {
-  el.dataset.scroll = "0";
-  el.dataset.hover = "0";
+  el.dataset["scroll"] = "0";
+  el.dataset["hover"] = "0";
   sync(el);
 };
 
@@ -65,7 +65,7 @@ function StepIcon({ i }: { i: number }) {
     if (img && img.complete && img.naturalWidth === 0) setFailed(true);
   }, []);
   const { Fallback, icon } = STEPS[i]!;
-  if (failed) return <Fallback className="h-9 w-9 text-burgundy" strokeWidth={1.75} />;
+  if (failed) return <Fallback className="h-9 w-9 text-burgundy" strokeWidth={1.75} aria-hidden="true" />;
   return (
     <img
       ref={ref}
@@ -138,7 +138,7 @@ export function HowItWorks() {
           current = idx;
           cards.forEach((c, i) => setFlag(c, "scroll", i <= idx));
           dashes.forEach((d, i) => {
-            d.dataset.on = i === idx ? "true" : "false";
+            d.dataset["on"] = i === idx ? "true" : "false";
           });
         };
         apply(0);
@@ -187,7 +187,7 @@ export function HowItWorks() {
           viewport.style.overflowX = "";
           cards.forEach(resetCard);
           dashes.forEach((d) => {
-            d.dataset.on = "false";
+            d.dataset["on"] = "false";
           });
         };
       });
@@ -228,16 +228,16 @@ export function HowItWorks() {
     >
       {/* Header: sejajar dengan section Awareness */}
       <div className="mx-auto w-full max-w-[74.5rem] px-5">
-        <p data-fade className="text-sm font-semibold tracking-[0.18em] text-burgundy">
+        <p data-fade className="text-sm font-semibold tracking-[0.14em] text-burgundy">
           CARA KERJA
         </p>
         <div className="mt-3 lg:grid lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
           <h2
             id="cara-kerja-title"
             ref={headRef}
-            className="font-display text-4xl leading-[1.05] tracking-tight text-balance text-navy sm:text-5xl lg:text-[clamp(2.5rem,4.4vw,4rem)]"
+            className="font-display text-4xl leading-[1.05] tracking-[-0.035em] text-balance text-navy sm:text-5xl lg:text-[clamp(2.25rem,3.8vw,3.5rem)]"
           >
-            A simple process, a <em className="text-burgundy">clearer understanding.</em>
+            A simple process, a clearer understanding.
           </h2>
           <p data-fade className="mt-5 max-w-md text-base leading-relaxed text-pretty text-olive lg:mt-0 lg:pb-2">
             Skrining awal tidak harus terasa rumit. Ikuti beberapa langkah sederhana untuk mengambil
@@ -267,19 +267,22 @@ export function HowItWorks() {
               />
 
               <div className="relative z-10 flex items-start justify-between">
-                <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card/70 opacity-60 grayscale transition-[filter,opacity,background-color,transform] duration-700 ease-out group-data-[on=true]/card:scale-100 group-data-[on=true]/card:bg-card group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
+                <span className="grid h-24 w-24 place-items-center rounded-[1.75rem] bg-card/70 opacity-60 grayscale transition-[filter,opacity,background-color] duration-700 ease-out group-data-[on=true]/card:bg-cream group-data-[on=true]/card:opacity-100 group-data-[on=true]/card:grayscale-0">
                   <StepIcon i={i} />
                 </span>
-                <span className="font-display text-6xl tabular-nums text-navy/15 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/30">
+                <span
+                  aria-hidden="true"
+                  className="font-display text-6xl tracking-[-0.04em] tabular-nums text-navy/20 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/35"
+                >
                   0{i + 1}
                 </span>
               </div>
 
               <div className="relative z-10 mt-auto pt-8">
-                <h3 className="font-display text-3xl tracking-tight text-navy/45 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
+                <h3 className="font-display text-3xl tracking-[-0.03em] text-navy/60 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground">
                   {s.title}
                 </h3>
-                <p className="mt-3 max-w-md text-base leading-relaxed text-olive/60 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/80">
+                <p className="mt-3 max-w-md text-base leading-relaxed text-olive/80 transition-colors duration-700 group-data-[on=true]/card:text-primary-foreground/85">
                   {s.text}
                 </p>
               </div>
