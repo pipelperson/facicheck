@@ -1,42 +1,25 @@
 import { useRef } from "react";
-import { ShieldAlert } from "lucide-react";
-import { gsap, useGSAP, SplitText, revealLines } from "@/lib/motion";
-import { Reveal } from "./Reveal";
+import { gsap, useGSAP } from "@/lib/motion";
+
+const SIGNS = ["Kelemahan anggota tubuh", "Gangguan bicara", "Gejala neurologis lainnya"];
 
 export function Notice() {
   const root = useRef<HTMLElement>(null);
-  const title = useRef<HTMLHeadingElement>(null);
-  const statement = useRef<HTMLParagraphElement>(null);
+  const scan = useRef<HTMLDivElement>(null);
 
   useGSAP(
     () => {
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
-        if (title.current) revealLines(title.current);
-        if (statement.current) {
-          // Kalimat inti menyala kata demi kata mengikuti scroll
-          SplitText.create(statement.current, {
-            type: "words",
-            autoSplit: true,
-            onSplit: (self) =>
-              gsap.fromTo(
-                self.words,
-                { opacity: 0.16 },
-                {
-                  opacity: 1,
-                  ease: "none",
-                  stagger: 0.12,
-                  duration: 0.6,
-                  scrollTrigger: {
-                    trigger: statement.current,
-                    start: "top 82%",
-                    end: "bottom 50%",
-                    scrub: true,
-                  },
-                },
-              ),
-          });
-        }
+        const el = scan.current;
+        if (!el) return;
+        const line = el.querySelector("[data-scan-line]");
+        gsap.set(el, { "--p": 0 });
+        gsap
+          .timeline({ scrollTrigger: { trigger: el, start: "top 75%", once: true } })
+          .set(line, { autoAlpha: 1 })
+          .to(el, { "--p": 1, duration: 1.3, ease: "power2.inOut" })
+          .to(line, { autoAlpha: 0, duration: 0.4, ease: "power1.out" }, "-=0.15");
       });
       return () => mm.revert();
     },
@@ -48,38 +31,70 @@ export function Notice() {
       ref={root}
       id="catatan"
       aria-labelledby="disclaimer-title"
-      className="px-5 py-24 lg:py-32"
+      className="relative px-5 py-20 lg:py-28"
     >
-      <Reveal className="mx-auto max-w-5xl">
-        <div className="rounded-[2rem] border border-rose/40 bg-card/90 p-8 sm:p-12 lg:p-16">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-accent text-burgundy">
-            <ShieldAlert className="h-6 w-6" aria-hidden="true" />
-          </span>
-
-          <h2
-            id="disclaimer-title"
-            ref={title}
-            className="mt-8 font-display text-4xl leading-[1.05] tracking-[-0.035em] text-navy sm:text-5xl lg:text-[3.5rem]"
+      <div className="mx-auto max-w-6xl">
+        <div ref={scan} className="relative">
+          {/* garis scan */}
+          <div
+            aria-hidden="true"
+            data-scan-line
+            className="pointer-events-none absolute inset-x-0 z-10 opacity-0"
+            style={{ top: "calc(var(--p, 1) * 100%)" }}
           >
-            Satu hal yang perlu diingat.
-          </h2>
+            <span
+              className="absolute inset-x-0 bottom-0 h-10"
+              style={{ background: "linear-gradient(to top, color-mix(in oklab, var(--rose) 28%, transparent), transparent)" }}
+            />
+            <span className="block h-px w-full bg-rose" />
+            <span className="absolute top-0 left-0 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-burgundy" />
+            <span className="absolute top-0 right-0 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-burgundy" />
+          </div>
 
-          <p
-            ref={statement}
-            className="mt-6 max-w-3xl text-xl leading-snug font-medium tracking-[-0.01em] text-navy sm:text-2xl lg:text-[1.75rem]"
+          {/* konten: tersingkap mengikuti garis scan */}
+          <div
+            style={{ clipPath: "inset(0 0 calc((1 - var(--p, 1)) * 100%) 0)" }}
+            className="border-t border-navy/10 pt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)] lg:gap-16 lg:pt-14"
           >
-            FaciCheck merupakan prototipe untuk skrining awal,{" "}
-            <span className="text-burgundy">
-              bukan alat untuk mendiagnosis kondisi medis.
-            </span>
-          </p>
+            <div>
+              <p className="text-sm font-semibold tracking-[0.14em] text-burgundy">CATATAN</p>
+              <h2
+                id="disclaimer-title"
+                className="mt-3 font-display text-4xl leading-[1.05] tracking-[-0.035em] text-balance text-navy sm:text-5xl lg:text-[clamp(2.25rem,3.8vw,3.5rem)]"
+              >
+                Satu hal yang perlu diingat.
+              </h2>
+            </div>
 
-          <p className="mt-8 max-w-2xl border-t border-border pt-6 text-base leading-relaxed text-olive sm:text-lg">
-            Jika Anda mengalami perubahan wajah secara tiba-tiba atau gejala
-            lain yang mengkhawatirkan, segera cari bantuan medis profesional.
-          </p>
+            <div className="mt-8 lg:mt-0">
+              <p className="text-xl leading-snug font-medium tracking-[-0.01em] text-navy sm:text-2xl">
+                FaciCheck merupakan prototipe untuk skrining awal,{" "}
+                <span className="text-burgundy">bukan alat untuk mendiagnosis kondisi medis.</span>
+              </p>
+              <p className="mt-5 max-w-xl text-base leading-relaxed text-olive sm:text-lg">
+                Hasil “tidak ada indikasi” juga bukan jaminan Anda sehat. Sistem ini masih bisa
+                melewatkan sebagian kasus, jadi tetap perhatikan perubahan pada wajah Anda.
+              </p>
+
+              <div className="mt-8 border-t border-navy/10 pt-6">
+                <p className="text-base text-olive sm:text-lg">
+                  Jika wajah Anda berubah secara mendadak, terutama disertai:
+                </p>
+                <ul className="mt-3 flex flex-col divide-y divide-navy/10 sm:flex-row sm:divide-x sm:divide-y-0">
+                  {SIGNS.map((s) => (
+                    <li key={s} className="py-2 text-base font-medium text-navy sm:px-5 sm:py-1 sm:first:pl-0">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-base font-semibold text-navy sm:text-lg">
+                  Segera cari pertolongan medis darurat.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }

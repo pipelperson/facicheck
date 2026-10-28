@@ -7,6 +7,8 @@ import { Notice } from "@/components/landing/Notice";
 import { FinalCta } from "@/components/landing/FinalCta";
 import { ScrollTrail } from "@/components/landing/ScrollTrail";
 import { Brand } from "@/components/landing/Brand";
+import { Backdrop } from "@/components/landing/Backdrop";
+import { Waves } from "@/components/landing/Waves";
 
 const TITLE = "FaciCheck — Skrining Awal Perubahan Wajah";
 const DESC =
@@ -29,15 +31,8 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="relative isolate min-h-screen overflow-x-clip bg-background">
-      {/* Lapisan background gradient lembut */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[130svh]"
-        style={{
-          background:
-            "radial-gradient(60% 45% at 88% 6%, color-mix(in oklab, var(--rose) 24%, transparent), transparent 70%), radial-gradient(45% 40% at 2% 24%, color-mix(in oklab, var(--sage) 18%, transparent), transparent 70%), radial-gradient(50% 35% at 62% 72%, color-mix(in oklab, var(--skin) 26%, transparent), transparent 70%)",
-        }}
-      />
+      <Backdrop />
+      <Waves />
 
       <Navbar />
       <main>
@@ -58,15 +53,14 @@ function Index() {
         <FinalCta />
       </main>
 
-      <footer className="border-t border-border px-5 py-12">
+      <footer className="px-5 pt-6 pb-10">
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[1.4fr_1fr_1.4fr]">
           <div>
             <Brand />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-olive">
-              Prototipe web skrining awal kemungkinan asimetri wajah melalui
-              analisis visual.
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-navy">
+              Prototipe web skrining awal kemungkinan asimetri wajah melalui analisis visual.
             </p>
-            <p className="mt-4 inline-block rounded-md bg-sage/25 px-2.5 py-1 text-xs font-semibold text-olive">
+            <p className="mt-4 inline-block rounded-md bg-card/70 px-2.5 py-1 text-xs font-semibold text-navy">
               Prototipe Akademik
             </p>
           </div>
@@ -77,7 +71,7 @@ function Index() {
                 <li key={l.href}>
                   <a
                     href={l.href}
-                    className="text-sm text-olive hover:text-burgundy"
+                    className="text-sm font-medium text-navy underline-offset-4 hover:text-burgundy hover:underline"
                   >
                     {l.label}
                   </a>
@@ -85,13 +79,12 @@ function Index() {
               ))}
             </ul>
           </nav>
-          <p className="text-sm leading-relaxed text-olive">
-            <span className="font-semibold text-navy">Disclaimer: </span>
-            FaciCheck bukan alat diagnosis medis dan tidak menggantikan
-            pemeriksaan tenaga kesehatan profesional.
+          <p className="text-sm leading-relaxed text-navy">
+            <span className="font-semibold">Disclaimer: </span>
+            FaciCheck bukan alat diagnosis medis dan tidak menggantikan pemeriksaan tenaga kesehatan profesional.
           </p>
         </div>
-        <p className="mx-auto mt-10 max-w-6xl text-xs text-olive">
+        <p className="mx-auto mt-10 max-w-6xl text-xs text-navy">
           © {new Date().getFullYear()} FaciCheck. Prototipe akademik.
         </p>
       </footer>

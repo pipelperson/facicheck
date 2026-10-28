@@ -32,8 +32,8 @@ const STEPS: Step[] = [
     bg: THEMES.burgundy.bg,
   },
   {
-    title: "Let FaciCheck analyze",
-    text: "Sistem memproses gambar untuk mengamati fitur visual wajah sesuai kemampuan model yang digunakan.",
+    title: "Check, then analyze",
+    text: "Sistem lebih dulu memeriksa kualitas gambar, seperti posisi wajah, ekspresi, dan pencahayaan. Jika sesuai, gambar dianalisis untuk mengamati fitur visual wajah sesuai kemampuan model yang digunakan.",
     icon: "/icons/howitworks-2-analyze.png",
     Fallback: ScanFace,
     bg: THEMES.navy.bg,
