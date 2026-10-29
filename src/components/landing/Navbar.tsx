@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { Brand } from "./Brand";
 
 export const NAV_LINKS = [
@@ -22,12 +23,12 @@ export function CtaButton({
   className?: string;
 }) {
   return (
-    <a
-      href="#mulai"
+    <Link
+      to="/skrining"
       className={`inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-cta transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97] ${focus} ${className}`}
     >
       {children}
-    </a>
+    </Link>
   );
 }
 
