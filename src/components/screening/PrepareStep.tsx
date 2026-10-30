@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Lock, Meh, ScanFace, Smartphone, Sun, Users, type LucideIcon } from "lucide-react";
 import { gsap, useGSAP } from "@/lib/motion";
 import { PoseExamples } from "./PoseExamples";
+import { warmUpBackend } from "@/lib/api";
 
 const TIPS: { icon: LucideIcon; title: string; text: string }[] = [
   { icon: ScanFace, title: "Hadapkan wajah lurus", text: "Menghadap kamera, tidak menoleh, mendongak, atau menunduk." },
@@ -13,6 +14,10 @@ const TIPS: { icon: LucideIcon; title: string; text: string }[] = [
 export function PrepareStep({ onStart }: { onStart: () => void }) {
   const root = useRef<HTMLDivElement>(null);
   const [agreed, setAgreed] = useState(false);
+
+  useEffect(() => {
+    warmUpBackend();
+  }, []);
 
   useGSAP(
     () => {

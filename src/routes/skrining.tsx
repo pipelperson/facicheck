@@ -5,7 +5,10 @@ import { ScreeningHeader } from "@/components/screening/ScreeningHeader";
 import { StepIndicator } from "@/components/screening/StepIndicator";
 import { PrepareStep } from "@/components/screening/PrepareStep";
 import { CameraStep } from "@/components/screening/CameraStep";
-import { STEP_LABELS, stepIndex, type CapturedPhoto, type Step } from "@/lib/screening";
+import { AnalyzeStep } from "@/components/screening/AnalyzeStep";
+import { RejectedStep } from "@/components/screening/RejectedStep";
+import { ResultStep } from "@/components/screening/ResultStep";
+import { STEP_LABELS, stepIndex, type CapturedPhoto, type PredictOutcome, type Step } from "@/lib/screening";
 
 export const Route = createFileRoute("/skrining")({
   head: () => ({
@@ -17,45 +20,11 @@ export const Route = createFileRoute("/skrining")({
   component: ScreeningPage,
 });
 
-/* Sementara: diganti di page berikutnya (Pemeriksaan, Analisis, Hasil) */
-function PlaceholderStep({ photo, onRetake, onBack }: { photo: CapturedPhoto | null; onRetake: () => void; onBack: () => void }) {
-  return (
-    <div className="mx-auto max-w-sm py-8 text-center">
-      {photo && (
-        <img
-          src={photo.url}
-          alt="Foto yang baru diambil"
-          className="mx-auto aspect-[3/4] w-56 rounded-2xl object-cover shadow-soft"
-          style={{ transform: photo.mirrored ? "scaleX(-1)" : undefined }}
-        />
-      )}
-      <p className="mt-6 font-display text-2xl tracking-[-0.02em] text-navy">
-        {photo ? "Foto berhasil diambil." : "Langkah ini sedang disiapkan."}
-      </p>
-      <p className="mt-2 text-base text-olive">Langkah pemeriksaan sedang dibuat di page berikutnya.</p>
-      <div className="mt-6 flex flex-wrap justify-center gap-3">
-        <button
-          type="button"
-          onClick={onRetake}
-          className="rounded-full bg-primary px-6 py-3 text-base font-semibold text-primary-foreground shadow-cta transition hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          Ambil ulang
-        </button>
-        <button
-          type="button"
-          onClick={onBack}
-          className="rounded-full border border-navy/20 px-6 py-3 text-base font-semibold text-navy transition hover:bg-card/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
-        >
-          Kembali ke persiapan
-        </button>
-      </div>
-    </div>
-  );
-}
-
 function ScreeningPage() {
   const [step, setStep] = useState<Step>("persiapan");
   const [photo, setPhoto] = useState<CapturedPhoto | null>(null);
+  const [outcome, setOutcome] = useState<PredictOutcome | null>(null);
+  const [rejections, setRejections] = useState(0);
   const stepRef = useRef<HTMLDivElement>(null);
   const first = useRef(true);
   const idx = stepIndex(step);
@@ -79,7 +48,25 @@ function ScreeningPage() {
 
   const handleCaptured = useCallback((p: CapturedPhoto) => {
     setPhoto(p);
-    setStep("pemeriksaan");
+    setOutcome(null);
+    setStep("analisis");
+  }, []);
+
+  const handleOutcome = useCallback((o: PredictOutcome) => {
+    setOutcome(o);
+    if (o.kind === "success") {
+      setRejections(0);
+      setStep("hasil");
+    } else {
+      setRejections((n) => n + 1);
+      setStep("pemeriksaan");
+    }
+  }, []);
+
+  const retake = useCallback(() => {
+    setPhoto(null);
+    setOutcome(null);
+    setStep("kamera");
   }, []);
 
   return (
@@ -101,18 +88,12 @@ function ScreeningPage() {
         >
           {step === "persiapan" && <PrepareStep onStart={() => setStep("kamera")} />}
           {step === "kamera" && <CameraStep onBack={() => setStep("persiapan")} onCaptured={handleCaptured} />}
-          {step !== "persiapan" && step !== "kamera" && (
-            <PlaceholderStep
-              photo={photo}
-              onRetake={() => {
-                setPhoto(null);
-                setStep("kamera");
-              }}
-              onBack={() => {
-                setPhoto(null);
-                setStep("persiapan");
-              }}
-            />
+          {step === "analisis" && photo && <AnalyzeStep photo={photo} onOutcome={handleOutcome} onRetake={retake} />}
+          {step === "pemeriksaan" && photo && outcome && outcome.kind !== "success" && (
+            <RejectedStep photo={photo} outcome={outcome} attempts={rejections} onRetake={retake} />
+          )}
+          {step === "hasil" && photo && outcome && outcome.kind === "success" && (
+            <ResultStep photo={photo} result={outcome} onRetake={retake} />
           )}
         </div>
       </main>

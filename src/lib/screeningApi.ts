@@ -1,7 +1,9 @@
 import type { FrameCheck, FrameReason } from "./screening";
 
-/** true = simulasi lokal. Ubah ke false setelah endpoint backend siap. */
-export const USE_SIMULATION = true;
+/** "local": deteksi wajah di browser (panduan awal). "simulation": data semu untuk uji tampilan. "off": tanpa penilaian langsung. */
+export const LIVE_CHECK_MODE = "local" as "off" | "simulation" | "local";
+export const USE_SIMULATION = LIVE_CHECK_MODE === "simulation";
+
 
 export type SimMode = "auto" | "ok" | FrameReason;
 
