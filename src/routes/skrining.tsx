@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowLeft } from "lucide-react";
 import { Backdrop } from "@/components/landing/Backdrop";
-import { ScreeningHeader } from "@/components/screening/ScreeningHeader";
 import { StepIndicator } from "@/components/screening/StepIndicator";
 import { PrepareStep } from "@/components/screening/PrepareStep";
 import { CameraStep } from "@/components/screening/CameraStep";
@@ -72,9 +72,8 @@ function ScreeningPage() {
   return (
     <div className="relative isolate flex min-h-screen flex-col overflow-x-clip bg-background">
       <Backdrop />
-      <ScreeningHeader />
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-28 pb-12 lg:pt-32">
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-10 pb-12 lg:pt-14">
         <StepIndicator current={idx} />
         <p className="sr-only" aria-live="polite">
           Langkah {idx + 1} dari {STEP_LABELS.length}: {STEP_LABELS[idx]}
@@ -98,9 +97,18 @@ function ScreeningPage() {
         </div>
       </main>
 
-      <footer className="px-6 pb-6 text-center text-xs leading-relaxed font-medium text-navy sm:text-sm">
-        Prototipe akademik, bukan alat diagnosis medis. Wajah berubah mendadak, disertai kelemahan anggota
-        tubuh atau gangguan bicara? Segera cari pertolongan medis darurat.
+      <footer className="px-6 pb-6 text-center">
+        <Link
+          to="/"
+          className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-navy underline-offset-4 transition hover:text-burgundy hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          Keluar ke beranda
+        </Link>
+        <p className="mx-auto mt-1 max-w-3xl text-xs leading-relaxed font-medium text-navy sm:text-sm">
+          Prototipe akademik, bukan alat diagnosis medis. Wajah berubah mendadak, disertai kelemahan anggota tubuh atau
+          gangguan bicara? Segera cari pertolongan medis darurat.
+        </p>
       </footer>
     </div>
   );

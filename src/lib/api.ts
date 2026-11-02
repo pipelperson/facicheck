@@ -1,4 +1,4 @@
-import type { PredictOutcome, RiskCode } from "./screening";
+import { LANDMARK_KEYS, type Landmarks, type PredictOutcome, type RiskCode } from "./screening";
 
 const FALLBACK_URL = "https://facicheck-backend.onrender.com";
 
@@ -37,6 +37,9 @@ function zoneFrom(code: unknown, probability: number | null): RiskCode {
   return "MODERATE_RISK";
 }
 
+function toPoint(p: unknown): [number, number] | null {  let x: unknown;  let y: unknown;  if (Array.isArray(p)) [x, y] = p;  else if (isRecord(p)) [x, y] = [p["x"], p["y"]];  const nx = num(x);  const ny = num(y);  if (nx === null || ny === null || nx < -0.1 || nx > 1.1 || ny < -0.1 || ny > 1.1) return null;  return [nx, ny];}
+function parseLandmarks(v: unknown): Landmarks | null {  if (!isRecord(v)) return null;  const out: Partial<Landmarks> = {};  for (const k of LANDMARK_KEYS) {    const pt = toPoint(v[k]);    if (!pt) return null;    out[k] = pt;  }  return out as Landmarks;}
+
 export function parsePredict(json: unknown): PredictOutcome {
   if (!isRecord(json)) throw new PredictError("Balasan server tidak dikenali.", "server");
 
@@ -55,6 +58,7 @@ export function parsePredict(json: unknown): PredictOutcome {
         eye_asymmetry: num(metrics["eye_asymmetry"]),
         mouth_tilt: num(metrics["mouth_tilt"]),
       },
+      landmarks: parseLandmarks(result["landmarks"] ?? json["landmarks"]),
     };
   }
 
@@ -95,7 +99,10 @@ export async function predictPhoto(blob: Blob, signal?: AbortSignal): Promise<Pr
       const detail = isRecord(body) && typeof body["detail"] === "string" ? body["detail"] : "";
       throw new PredictError(detail || `Server membalas dengan kode ${res.status}.`, "server");
     }
-    return parsePredict(await res.json());
+    const json = await res.json();
+    console.log("Balasan dari Backend:", json);
+    return parsePredict(json);
+
   } catch (e) {
     if (e instanceof PredictError) throw e;
     if (signal?.aborted) throw e; // dibatalkan oleh pemanggil

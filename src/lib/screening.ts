@@ -53,22 +53,27 @@ export const REASON_PRIORITY: FrameReason[] = [
 
 export const REASON_MESSAGES: Record<FrameReason, string> = {
   tidak_ada_wajah: "Wajah belum terlihat. Posisikan wajah di dalam oval.",
-  banyak_wajah: "Terdapat lebih dari satu wajah di frame. Fokus ke satu wajah saja.",
-  tidak_di_tengah: "Wajah terlalu jauh dari tengah oval. Pusatkan wajah Anda.",
-  terlalu_jauh: "Wajah terlalu jauh dari kamera. Dekatkan wajah ke kamera.",
-  terlalu_dekat: "Wajah terlalu dekat dengan kamera. Jarakkan sedikit agar lebih proporsional.",
+  banyak_wajah: "Terlihat lebih dari satu wajah. Pastikan hanya Anda yang berada di depan kamera.",
+  tidak_di_tengah: "Geser wajah ke tengah oval.",
+  terlalu_jauh: "Wajah terlalu jauh. Dekatkan kamera.",
+  terlalu_dekat: "Wajah terlalu dekat. Jauhkan kamera sedikit.",
   menoleh: "Wajah menoleh. Hadapkan wajah lurus ke kamera.",
   dongak: "Kepala terlalu mendongak atau menunduk. Pegang kamera setinggi mata.",
   miring: "Kepala atau ponsel miring. Tegakkan kepala dan ponsel.",
   mulut_terbuka: "Mulut terbuka. Katupkan bibir dengan rileks.",
   senyum: "Terlihat tersenyum. Gunakan ekspresi netral.",
   buram: "Gambar buram. Tahan kamera dengan stabil.",
-  cahaya: "Cahaya kurang merata. Hadapkan wajah ke sumber cahaya.",
+  cahaya: "Cahaya kurang terang. Hadapkan wajah ke sumber cahaya.",
 };
 
 /* ---------- Hasil dari backend (/api/predict) ---------- */
 
 export type RiskCode = "NORMAL" | "MODERATE_RISK" | "HIGH_RISK";
+
+export const LANDMARK_KEYS = ["brow_left", "brow_right", "eye_left", "eye_right", "mouth_left", "mouth_right"] as const;
+export type LandmarkKey = (typeof LANDMARK_KEYS)[number];
+/** Koordinat 0–1 terhadap foto yang dikirim (tidak dicerminkan). */
+export type Landmarks = Record<LandmarkKey, [number, number]>;
 
 export type PredictOutcome =
   | {
@@ -78,6 +83,7 @@ export type PredictOutcome =
       /** dalam persen, mis. 78.5 berarti 78,5% */
       probability: number | null;
       metrics: { brow_asymmetry: number | null; eye_asymmetry: number | null; mouth_tilt: number | null };
+      landmarks: Landmarks | null;
     }
   | { kind: "rejected"; violations: string[]; messages: string[] }
   | { kind: "invalid"; message: string };

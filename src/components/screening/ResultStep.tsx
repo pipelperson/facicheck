@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Camera, ChevronDown } from "lucide-react";
 import {
@@ -9,8 +10,9 @@ import {
   readAreas,
   summarizeAreas,
   type AreaReading,
+  type MetricKey,
 } from "@/lib/result-copy";
-import type { CapturedPhoto, SuccessOutcome } from "@/lib/screening";
+import type { CapturedPhoto, Landmarks, SuccessOutcome } from "@/lib/screening";
 
 function Lamps({ index }: { index: number }) {
   return (
@@ -59,6 +61,39 @@ function AreaRow({ r }: { r: AreaReading }) {
   );
 }
 
+const PAIRS = [
+  { id: "brow", metric: "brow_asymmetry", a: "brow_left", b: "brow_right" },
+  { id: "eye", metric: "eye_asymmetry", a: "eye_left", b: "eye_right" },
+  { id: "mouth", metric: "mouth_tilt", a: "mouth_left", b: "mouth_right" },
+] as const satisfies readonly { id: string; metric: MetricKey; a: keyof Landmarks; b: keyof Landmarks }[];
+
+/** Garis penuh = posisi sebenarnya. Garis putus-putus = acuan sejajar. Warna mengikuti penilaian bagian itu bila ada. */
+function LandmarkOverlay({ marks, rows }: { marks: Landmarks; rows: AreaReading[] }) {
+  const W = 300;
+  const H = 400;
+  const midX = (marks.eye_left[0] + marks.eye_right[0] + marks.mouth_left[0] + marks.mouth_right[0]) / 4;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
+      <line x1={midX * W} y1={H * 0.08} x2={midX * W} y2={H * 0.92} stroke="white" strokeOpacity=".6" strokeWidth="1" strokeDasharray="4 4" />
+      {PAIRS.map((p) => {
+        const a = marks[p.a];
+        const b = marks[p.b];
+        const level = rows.find((r) => r.key === p.metric)?.level;
+        const color = level === undefined ? "var(--rose)" : (LAMP_COLORS[level] ?? "var(--rose)");
+        const midY = (a[1] + b[1]) / 2;
+        return (
+          <g key={p.id}>
+            <line x1={a[0] * W} y1={midY * H} x2={b[0] * W} y2={midY * H} stroke="white" strokeOpacity=".7" strokeWidth="1.2" strokeDasharray="3 3" />
+            <line x1={a[0] * W} y1={a[1] * H} x2={b[0] * W} y2={b[1] * H} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+            <circle cx={a[0] * W} cy={a[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
+            <circle cx={b[0] * W} cy={b[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
 const NEXT_STEPS = [
   "Temui dokter umum atau dokter saraf untuk pemeriksaan langsung.",
   "Catat kapan perubahan mulai terasa dan gejala lain yang menyertai.",
@@ -71,15 +106,35 @@ export function ResultStep({ photo, result, onRetake }: { photo: CapturedPhoto; 
   const summary = summarizeAreas(result.code, rows);
   const score = result.probability === null ? null : Math.round(Math.min(100, Math.max(0, result.probability)));
 
+  const marks = result.landmarks;
+  const [showMarks, setShowMarks] = useState(true);
+
   return (
     <div className="grid gap-8 lg:grid-cols-[minmax(0,0.65fr)_minmax(0,1.35fr)] lg:gap-14">
       <div className="lg:self-start">
-        <img
-          src={photo.url}
-          alt="Foto yang dianalisis"
-          className="mx-auto aspect-[3/4] w-48 rounded-2xl object-cover shadow-soft lg:mx-0 lg:w-56"
+        <div
+          className="relative mx-auto aspect-[3/4] w-52 overflow-hidden rounded-2xl shadow-soft lg:mx-0 lg:w-64"
           style={{ transform: photo.mirrored ? "scaleX(-1)" : undefined }}
-        />
+        >
+          <img src={photo.url} alt="Foto yang dianalisis" className="h-full w-full object-cover" />
+          {marks && showMarks && <LandmarkOverlay marks={marks} rows={rows} />}
+        </div>
+        {marks && (
+          <div className="mx-auto mt-3 w-52 lg:mx-0 lg:w-64">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-navy">
+              <input
+                type="checkbox"
+                checked={showMarks}
+                onChange={(e) => setShowMarks(e.target.checked)}
+                className="h-4 w-4 accent-burgundy"
+              />
+              Tampilkan garis pembanding
+            </label>
+            <p className="mt-1 text-sm leading-relaxed text-olive">
+              Garis penuh menunjukkan posisi alis, mata, dan sudut mulut Anda. Garis putus-putus adalah acuan sejajar.
+            </p>
+          </div>
+        )}
       </div>
 
       <div>
