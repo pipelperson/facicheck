@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useState } from "react";
-import { ArrowLeft, CameraOff, Check, Info, LoaderCircle, ScanFace, SwitchCamera, TriangleAlert, type LucideIcon } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, CameraOff, LoaderCircle, SwitchCamera, TriangleAlert, type LucideIcon } from "lucide-react";
 import { useCamera, type CameraStatus } from "@/hooks/use-camera";
-import { useLiveCheck, type Engine } from "@/hooks/use-live-check";
+import { useHeldValue } from "@/hooks/use-held-value";
+import { useLiveCheck } from "@/hooks/use-live-check";
 import { capturePhoto } from "@/lib/capture";
-import { REASON_MESSAGES, type CapturedPhoto, type FrameReason, type LiveState } from "@/lib/screening";
+import { guideFull, guideShort, guideState, type GuideKey } from "@/lib/guide-copy";
+import type { CapturedPhoto, LiveState } from "@/lib/screening";
 import { USE_SIMULATION, restartSimulation, setSimMode, type SimMode } from "@/lib/screeningApi";
 
 const FRAME_W = "min(100%, 28rem, calc(72svh * 0.75))";
@@ -80,58 +82,20 @@ function Guide({ state }: { state: LiveState }) {
   );
 }
 
-const TONE: Record<LiveState, { color: string | null; icon: LucideIcon }> = {
-  searching: { color: null, icon: ScanFace },
-  adjust: { color: BAD, icon: Info },
-  ready: { color: GOOD, icon: Check },
-};
-
-function LiveHint({
-  preparing,
-  engine,
-  state,
-  reason,
-  stuck,
-}: {
-  preparing: boolean;
-  engine: Engine;
-  state: LiveState;
-  reason: FrameReason | null;
-  stuck: boolean;
-}) {
-  const guided = !preparing && engine === "ready";
-  const tone = TONE[guided ? state : "searching"];
-  const Icon = tone.icon;
-  const text = preparing
-    ? "Menyiapkan kamera…"
-    : engine === "loading"
-      ? "Menyiapkan panduan posisi…"
-      : engine !== "ready"
-        ? "Posisikan wajah di dalam oval, lalu tekan tombol foto. Foto akan diperiksa otomatis setelah diambil."
-        : state === "ready"
-          ? "Posisi pas. Tahan sebentar, lalu tekan tombol foto."
-          : REASON_MESSAGES[reason ?? "tidak_ada_wajah"];
+/** Pesan singkat di atas bingkai kamera, tempat mata pengguna memandang. */
+function GuideBadge({ gkey }: { gkey: GuideKey }) {
+  const text = guideShort(gkey);
+  if (!text) return null;
+  const state = guideState(gkey);
+  const color = state === "ready" ? GOOD : state === "adjust" ? BAD : NEUTRAL;
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="mt-6 border-l-2 pl-4 transition-colors duration-300"
-      style={{ borderColor: tone.color ?? "rgba(53,68,91,0.3)" }}
-    >
-      <div className="flex items-start gap-3">
-        <span
-          className={`mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full ${tone.color ? "text-white" : "bg-navy/10 text-navy"}`}
-          style={tone.color ? { background: tone.color } : undefined}
-        >
-          <Icon className="h-4 w-4" aria-hidden="true" />
+    <div className="pointer-events-none absolute inset-x-0 top-3 flex justify-center px-3">
+      <div className="flex max-w-full items-center gap-2 rounded-full bg-navy/85 px-4 py-2 text-base font-semibold text-white shadow-soft">
+        <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: color }} />
+        <span key={gkey} className="animate-in truncate duration-200 fade-in">
+          {text}
         </span>
-        <p className="text-lg leading-snug font-semibold text-navy">{text}</p>
       </div>
-      {guided && stuck && state !== "ready" && (
-        <p className="mt-2 pl-10 text-sm leading-relaxed text-olive">
-          Sulit mendapat posisi pas? Anda tetap bisa mengambil foto, lalu sistem akan memeriksanya.
-        </p>
-      )}
     </div>
   );
 }
@@ -182,14 +146,29 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
   const { videoRef, status, facing, canFlip, retry, flip } = useCamera();
   const ready = status === "ready";
   const live = useLiveCheck(videoRef, ready);
+  const gated = live.engine === "ready" || live.engine === "loading";
+
+  // satu kunci tunggal untuk oval, pesan di kamera, dan pengumuman; ditahan agar tidak berkedip
+  const rawKey: GuideKey = !ready
+    ? "none"
+    : live.engine === "loading"
+      ? "loading"
+      : live.engine === "ready"
+        ? live.state === "ready"
+          ? "ok"
+          : (live.reason ?? "tidak_ada_wajah")
+        : "none";
+  const key = useHeldValue(rawKey, 800);
+
   const [countdownOn, setCountdownOn] = useState(true);
   const [count, setCount] = useState<number | null>(null);
   const [flash, setFlash] = useState(false);
   const [stuck, setStuck] = useState(false);
+  const [voiceOn, setVoiceOn] = useState(false);
+  const lastSpoke = useRef(0);
   const mirrored = facing === "user";
   const counting = count !== null;
-  // tombol foto dikunci sampai posisi pas hanya bila panduan sedang aktif/dimuat
-  const gated = live.engine === "ready" || live.engine === "loading";
+  const canSpeak = typeof window !== "undefined" && "speechSynthesis" in window;
 
   useEffect(() => {
     restartSimulation();
@@ -201,6 +180,26 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
     const id = window.setTimeout(() => setStuck(true), 12000);
     return () => window.clearTimeout(id);
   }, [ready, gated]);
+
+  // suara panduan (opsional, default mati)
+  useEffect(() => {
+    if (!voiceOn || !canSpeak || key === "none" || key === "loading") return;
+    const now = Date.now();
+    if (key !== "ok" && now - lastSpoke.current < 2500) return;
+    lastSpoke.current = now;
+    const u = new SpeechSynthesisUtterance(guideShort(key));
+    u.lang = "id-ID";
+    u.rate = 0.95;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  }, [key, voiceOn, canSpeak]);
+
+  useEffect(
+    () => () => {
+      if (canSpeak) window.speechSynthesis.cancel();
+    },
+    [canSpeak],
+  );
 
   const shoot = useCallback(async () => {
     const video = videoRef.current;
@@ -222,7 +221,7 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
     return () => window.clearTimeout(id);
   }, [count, shoot]);
 
-  const canShoot = ready && !counting && (!gated || live.state === "ready" || stuck);
+  const canShoot = ready && !counting && (!gated || key === "ok" || stuck);
   const active = canShoot || counting;
   const onShutter = () => {
     if (counting) setCount(null);
@@ -231,6 +230,18 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
       else void shoot();
     }
   };
+
+  const hint = counting
+    ? "Tahan posisi… tekan lagi untuk membatalkan."
+    : !ready
+      ? "Tombol foto muncul setelah kamera siap."
+      : canShoot
+        ? gated && key !== "ok"
+          ? "Posisi belum pas, tetapi Anda tetap bisa mengambil foto."
+          : "Tekan tombol putih untuk mengambil foto."
+        : gated && key !== "ok" && key !== "none"
+          ? guideFull(key)
+          : "Tombol aktif saat oval berwarna hijau.";
 
   return (
     <div className="grid gap-x-16 gap-y-8 lg:grid-cols-2 lg:grid-rows-[auto_1fr]">
@@ -255,7 +266,10 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
               style={{ transform: mirrored ? "scaleX(-1)" : undefined }}
             />
             {ready ? (
-              <Guide state={live.engine === "ready" ? live.state : "searching"} />
+              <>
+                <Guide state={guideState(key)} />
+                <GuideBadge gkey={key} />
+              </>
             ) : (
               <CameraNotice status={status as Exclude<CameraStatus, "ready">} onRetry={retry} />
             )}
@@ -310,25 +324,19 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
             )}
           </div>
 
-          <p id="shutter-hint" className="mt-3 text-center text-sm text-olive">
-            {counting
-              ? "Tahan posisi… tekan lagi untuk membatalkan."
-              : !ready
-                ? "Tombol foto muncul setelah kamera siap."
-                : canShoot
-                  ? gated && live.state !== "ready"
-                    ? "Posisi belum pas, tetapi Anda tetap bisa mengambil foto."
-                    : "Tekan tombol putih untuk mengambil foto."
-                  : "Tombol aktif saat oval berwarna hijau."}
+          {/* Pesan lengkap tepat di bawah kamera, tempat pandangan berada */}
+          <p id="shutter-hint" className="mt-3 text-center text-base leading-snug font-medium text-navy">
+            {hint}
+          </p>
+          <p className="sr-only" role="status" aria-live="polite">
+            {ready ? guideFull(key) : ""}
           </p>
         </div>
       </div>
 
       {/* Panduan */}
       <div className="lg:col-start-1 lg:row-start-2">
-        <LiveHint preparing={!ready} engine={live.engine} state={live.state} reason={live.reason} stuck={stuck} />
-
-        <ul className="mt-8 space-y-2 text-base leading-relaxed text-olive">
+        <ul className="space-y-2 text-base leading-relaxed text-olive">
           <li>Hadap lurus, ekspresi netral, mulut tertutup.</li>
           <li>Pegang kamera setinggi mata dan tahan dengan stabil.</li>
           <li>Cahaya dari depan wajah, bukan dari belakang.</li>
@@ -351,15 +359,28 @@ export function CameraStep({ onBack, onCaptured }: { onBack: () => void; onCaptu
           </div>
         )}
 
-        <label className="mt-8 flex cursor-pointer items-center gap-3 py-1 text-base text-navy">
-          <input
-            type="checkbox"
-            checked={countdownOn}
-            onChange={(e) => setCountdownOn(e.target.checked)}
-            className="h-5 w-5 shrink-0 cursor-pointer accent-burgundy"
-          />
-          Hitung mundur 3 detik sebelum foto diambil
-        </label>
+        <div className="mt-8 space-y-1">
+          <label className="flex cursor-pointer items-center gap-3 py-1 text-base text-navy">
+            <input
+              type="checkbox"
+              checked={countdownOn}
+              onChange={(e) => setCountdownOn(e.target.checked)}
+              className="h-5 w-5 shrink-0 cursor-pointer accent-burgundy"
+            />
+            Hitung mundur 3 detik sebelum foto diambil
+          </label>
+          {canSpeak && (
+            <label className="flex cursor-pointer items-center gap-3 py-1 text-base text-navy">
+              <input
+                type="checkbox"
+                checked={voiceOn}
+                onChange={(e) => setVoiceOn(e.target.checked)}
+                className="h-5 w-5 shrink-0 cursor-pointer accent-burgundy"
+              />
+              Suara panduan (dibacakan)
+            </label>
+          )}
+        </div>
 
         <button
           type="button"

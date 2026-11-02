@@ -1,11 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Camera, ChevronDown } from "lucide-react";
+import { gsap, revealLines, showNow, useGSAP } from "@/lib/motion";
 import {
   LAMP_COLORS,
-  LEVEL_TEXT,
-  RELIABILITY,
-  ZONES,
+  OUTCOMES,
   ZONE_LABELS,
   readAreas,
   summarizeAreas,
@@ -14,50 +13,32 @@ import {
 } from "@/lib/result-copy";
 import type { CapturedPhoto, Landmarks, SuccessOutcome } from "@/lib/screening";
 
-function Lamps({ index }: { index: number }) {
+const TINTS = ["rgba(163,165,126,0.3)", "rgba(186,151,150,0.3)", "rgba(147,77,86,0.3)"] as const;
+
+/** Skala tiga tahap: tahap aktif berwarna penuh dengan penanda segitiga. */
+function ResultScale({ index }: { index: number }) {
   return (
-    <ol aria-label="Lampu hasil" className="mt-6 flex max-w-xl items-start gap-4 sm:gap-10">
+    <ol aria-label={`Tingkat hasil: ${ZONE_LABELS[index]}`} className="flex max-w-md gap-1.5">
       {ZONE_LABELS.map((label, i) => {
         const on = i === index;
         return (
-          <li key={label} aria-current={on ? "true" : undefined} className="flex flex-1 flex-col items-center gap-2 text-center">
-            <span aria-hidden="true" className="relative grid h-14 w-14 place-items-center">
-              {on && <span className="absolute inset-0 rounded-full opacity-25" style={{ background: LAMP_COLORS[i] }} />}
-              <span
-                className={`rounded-full transition-all duration-500 ${on ? "h-9 w-9" : "h-6 w-6 opacity-30"}`}
-                style={{ background: LAMP_COLORS[i] }}
-              />
-            </span>
-            <span className={`text-sm font-semibold sm:text-base ${on ? "text-navy" : "text-olive"}`}>
+          <li key={label} aria-current={on ? "true" : undefined} className="flex-1">
+            <div className="flex h-2.5 justify-center" aria-hidden="true">
+              {on && <span className="h-0 w-0 border-x-[5px] border-t-[6px] border-x-transparent border-t-navy" />}
+            </div>
+            <div
+              {...(on ? { "data-active-seg": "" } : {})}
+              className="h-1.5 origin-left rounded-full"
+              style={{ background: on ? LAMP_COLORS[i] : TINTS[i] }}
+            />
+            <p className={`mt-2 text-xs leading-snug sm:text-sm ${on ? "font-semibold text-navy" : "text-olive"}`}>
               {label}
               {on && <span className="sr-only"> (hasil Anda)</span>}
-            </span>
+            </p>
           </li>
         );
       })}
     </ol>
-  );
-}
-
-function AreaRow({ r }: { r: AreaReading }) {
-  return (
-    <li className="flex items-start gap-4 py-3">
-      <span aria-hidden="true" className="flex gap-1 pt-2.5">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className={`h-2 w-6 rounded-full ${i <= r.level ? "" : "bg-navy/15"}`}
-            style={i <= r.level ? { background: LAMP_COLORS[r.level] } : undefined}
-          />
-        ))}
-      </span>
-      <div>
-        <p className="text-base font-semibold text-navy">
-          {r.name}: <span className="font-medium">{LEVEL_TEXT[r.level]}</span>
-        </p>
-        <p className="text-sm text-olive">{r.what}</p>
-      </div>
-    </li>
   );
 }
 
@@ -84,9 +65,20 @@ function LandmarkOverlay({ marks, rows }: { marks: Landmarks; rows: AreaReading[
         return (
           <g key={p.id}>
             <line x1={a[0] * W} y1={midY * H} x2={b[0] * W} y2={midY * H} stroke="white" strokeOpacity=".7" strokeWidth="1.2" strokeDasharray="3 3" />
-            <line x1={a[0] * W} y1={a[1] * H} x2={b[0] * W} y2={b[1] * H} stroke={color} strokeWidth="2.5" strokeLinecap="round" />
-            <circle cx={a[0] * W} cy={a[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
-            <circle cx={b[0] * W} cy={b[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
+            <line
+              data-line
+              pathLength={1}
+              strokeDasharray={1}
+              x1={a[0] * W}
+              y1={a[1] * H}
+              x2={b[0] * W}
+              y2={b[1] * H}
+              stroke={color}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            />
+            <circle data-dot cx={a[0] * W} cy={a[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
+            <circle data-dot cx={b[0] * W} cy={b[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
           </g>
         );
       })}
@@ -94,33 +86,70 @@ function LandmarkOverlay({ marks, rows }: { marks: Landmarks; rows: AreaReading[
   );
 }
 
-const NEXT_STEPS = [
-  "Temui dokter umum atau dokter saraf untuk pemeriksaan langsung.",
-  "Catat kapan perubahan mulai terasa dan gejala lain yang menyertai.",
-  "Ceritakan hasil skrining ini kepada dokter sebagai informasi awal.",
-];
-
 export function ResultStep({ photo, result, onRetake }: { photo: CapturedPhoto; result: SuccessOutcome; onRetake: () => void }) {
-  const zone = ZONES[result.code];
-  const rows = readAreas(result.metrics);
-  const summary = summarizeAreas(result.code, rows);
-  const score = result.probability === null ? null : Math.round(Math.min(100, Math.max(0, result.probability)));
-
-  const marks = result.landmarks;
+  const root = useRef<HTMLDivElement>(null);
+  const title = useRef<HTMLHeadingElement>(null);
   const [showMarks, setShowMarks] = useState(true);
 
+  const o = OUTCOMES[result.code];
+  const rows = readAreas(result.metrics);
+  const summary = summarizeAreas(result.code, rows);
+  const marks = result.landmarks;
+  const score = result.probability === null ? null : Math.round(Math.min(100, Math.max(0, result.probability)));
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia();
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        if (title.current) revealLines(title.current, { scroll: false, delay: 0.15 });
+        gsap.fromTo("[data-active-seg]", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.out", delay: 0.1 });
+        gsap.fromTo(
+          "[data-rise]",
+          { y: 14, autoAlpha: 0 },
+          { y: 0, autoAlpha: 1, duration: 0.7, ease: "power3.out", stagger: 0.09, delay: 0.45 },
+        );
+        if (marks) {
+          // garis scan menyapu foto sekali, lalu garis ukur "tergambar"
+          gsap
+            .timeline({ delay: 0.5 })
+            .fromTo("[data-scan]", { top: "0%", autoAlpha: 1 }, { top: "100%", duration: 1.1, ease: "power1.inOut" })
+            .to("[data-scan]", { autoAlpha: 0, duration: 0.25 })
+            .fromTo("[data-line]", { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.7, stagger: 0.15, ease: "power2.out" }, 0.9)
+            .from("[data-dot]", { autoAlpha: 0, duration: 0.35, stagger: 0.06 }, "<0.2");
+        }
+      });
+      mm.add("(prefers-reduced-motion: reduce)", () => {
+        gsap.set("[data-rise]", { autoAlpha: 1 });
+        showNow(title.current);
+      });
+      return () => mm.revert();
+    },
+    { scope: root },
+  );
+
   return (
-    <div className="grid gap-8 lg:grid-cols-[minmax(0,0.65fr)_minmax(0,1.35fr)] lg:gap-14">
+    <div ref={root} className="grid gap-10 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)] lg:gap-16">
+      {/* Foto */}
       <div className="lg:self-start">
         <div
-          className="relative mx-auto aspect-[3/4] w-52 overflow-hidden rounded-2xl shadow-soft lg:mx-0 lg:w-64"
-          style={{ transform: photo.mirrored ? "scaleX(-1)" : undefined }}
+          className="relative mx-auto aspect-[3/4] overflow-hidden rounded-2xl shadow-soft lg:mx-0"
+          style={{ width: "min(100%, 20rem, calc(58svh * 0.75))", transform: photo.mirrored ? "scaleX(-1)" : undefined }}
         >
           <img src={photo.url} alt="Foto yang dianalisis" className="h-full w-full object-cover" />
           {marks && showMarks && <LandmarkOverlay marks={marks} rows={rows} />}
+          {marks && (
+            <div
+              data-scan
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-x-0 top-0 opacity-0"
+            >
+              <div className="h-6" style={{ background: "linear-gradient(to bottom, transparent, color-mix(in oklab, var(--rose) 45%, transparent))" }} />
+              <div className="h-0.5 bg-rose" />
+            </div>
+          )}
         </div>
         {marks && (
-          <div className="mx-auto mt-3 w-52 lg:mx-0 lg:w-64">
+          <div data-rise className="mx-auto mt-3 opacity-0 lg:mx-0" style={{ width: "min(100%, 20rem)" }}>
             <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-navy">
               <input
                 type="checkbox"
@@ -137,110 +166,88 @@ export function ResultStep({ photo, result, onRetake }: { photo: CapturedPhoto; 
         )}
       </div>
 
-      <div>
-        <p className="text-sm font-semibold tracking-[0.14em] text-burgundy">HASIL SKRINING AWAL</p>
-        <h1 className="mt-3 font-display text-3xl leading-[1.1] tracking-[-0.03em] text-balance text-navy sm:text-4xl lg:text-[2.75rem]">
-          {zone.title}
+      {/* Isi */}
+      <div className="max-w-xl">
+        <ResultScale index={o.index} />
+
+        <h1
+          ref={title}
+          className="invisible mt-6 font-display text-3xl leading-[1.12] tracking-[-0.03em] text-balance text-navy sm:text-4xl lg:text-[2.6rem]"
+        >
+          {o.headline}
         </h1>
 
-        <Lamps index={zone.index} />
-
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-navy">{zone.text}</p>
-        <p className="mt-3 max-w-xl text-base leading-relaxed text-olive">
-          Hasil ini bukan diagnosis dan tidak menggantikan pemeriksaan dokter.
+        <p data-rise className="mt-5 text-lg leading-relaxed text-navy opacity-0">
+          {o.lead}
+        </p>
+        {summary && (
+          <p data-rise className="mt-2 text-base font-medium text-navy opacity-0">
+            {summary}
+          </p>
+        )}
+        <p data-rise className="mt-3 text-base leading-relaxed text-olive opacity-0">
+          {o.note}
         </p>
 
-        {/* Bagian wajah yang diperiksa */}
-        <div className="mt-8 max-w-xl">
-          <p className="text-base font-semibold text-navy sm:text-lg">Bagian wajah yang diperiksa</p>
-          <p className="mt-2 text-base leading-relaxed text-olive">
-            Sistem membandingkan sisi kiri dan kanan wajah Anda pada tiga bagian: alis, mata, dan sudut mulut. Semakin
-            besar perbedaannya, semakin besar kemungkinan ada kelemahan otot wajah di satu sisi, seperti pada Bell’s palsy.
-          </p>
-          {rows.length > 0 && (
-            <>
-              <ul className="mt-3 divide-y divide-navy/10 border-y border-navy/10">
-                {rows.map((r) => (
-                  <AreaRow key={r.key} r={r} />
-                ))}
-              </ul>
-              {summary && <p className="mt-3 text-base font-medium text-navy">{summary}</p>}
-            </>
-          )}
+        <div data-rise className="mt-6 border-l-2 border-rose pl-4 text-base leading-relaxed text-navy opacity-0">
+          <span className="font-semibold">Saran. </span>
+          {o.advice}
         </div>
 
-        <div className="mt-8 max-w-xl">
-          <p className="text-base font-semibold text-navy sm:text-lg">Langkah selanjutnya</p>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-base leading-relaxed text-olive marker:font-semibold marker:text-burgundy">
-            {NEXT_STEPS.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ol>
-        </div>
+        <p data-rise className="mt-5 text-sm leading-relaxed text-navy opacity-0">
+          <span className="font-semibold">Segera cari pertolongan medis darurat</span> bila wajah berubah mendadak dan
+          disertai kelemahan pada lengan atau tungkai, sulit berbicara, pusing hebat, atau gangguan penglihatan.
+        </p>
 
-        <div className="mt-8 max-w-xl border-l-2 border-burgundy pl-4">
-          <p className="text-base font-semibold text-navy">Tanda yang perlu pertolongan darurat</p>
-          <p className="mt-1 text-base text-olive">Jika wajah berubah mendadak, terutama disertai:</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5 text-base text-navy">
-            <li>Kelemahan pada lengan atau tungkai</li>
-            <li>Gangguan bicara</li>
-            <li>Gejala saraf lainnya, seperti pusing hebat atau penglihatan kabur</li>
-          </ul>
-          <p className="mt-3 text-base font-semibold text-navy">Segera cari pertolongan medis darurat.</p>
-        </div>
-
-        <details className="group mt-8 max-w-xl border-t border-navy/10 pt-3">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-2 text-base font-semibold text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
-            Penjelasan lebih lengkap
-            <ChevronDown className="h-5 w-5 transition group-open:rotate-180" aria-hidden="true" />
-          </summary>
-
-          <div className="mt-3 space-y-6 text-base leading-relaxed text-olive">
-            <div>
-              <p className="font-semibold text-navy">Bagaimana sistem menilai?</p>
-              <p className="mt-1">
-                Sistem mencari titik-titik penting di wajah Anda, lalu membandingkan sisi kiri dan kanan. Hasilnya
-                dicocokkan dengan pola dari lebih dari seribu foto yang pernah dipelajari sistem.
-              </p>
-              {score !== null && (
-                <p className="mt-2">
-                  Skor sistem untuk foto ini: <span className="font-semibold text-navy">{score} dari 100</span>. Makin
-                  tinggi skornya, makin besar kecenderungan adanya tanda Bell’s palsy. Skor ini bukan angka kepastian.
-                </p>
-              )}
-            </div>
-
-            <div>
-              <p className="font-semibold text-navy">Seberapa bisa dipercaya?</p>
-              <ul className="mt-1 list-disc space-y-1 pl-5">
-                {RELIABILITY.map((t) => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-              <p className="mt-2">
-                Artinya sistem bisa keliru: kadang melewatkan orang yang sakit, kadang mengira orang sehat memiliki
-                tanda. Karena itu hasil ini hanya gambaran awal dan tidak menggantikan pemeriksaan dokter.
-              </p>
-            </div>
-          </div>
-        </details>
-
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div data-rise className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 opacity-0">
           <button
             type="button"
             onClick={onRetake}
             className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-base font-semibold text-primary-foreground shadow-cta transition hover:-translate-y-0.5 hover:brightness-110 active:translate-y-0 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <Camera className="h-5 w-5" aria-hidden="true" />
-            Ulangi Skrining
+            {o.primary}
           </button>
           <Link
             to="/"
-            className="inline-flex min-h-12 items-center justify-center rounded-full border border-navy/20 px-7 py-3 text-base font-semibold text-navy transition hover:bg-card/70 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="inline-flex min-h-11 items-center text-base font-semibold text-navy underline underline-offset-4 transition hover:text-burgundy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            Kembali ke Beranda
+            Kembali ke beranda
           </Link>
         </div>
+
+        <details data-rise className="group mt-8 opacity-0">
+          <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 py-1 text-sm font-semibold text-navy underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&::-webkit-details-marker]:hidden">
+            Penjelasan lebih lengkap
+            <ChevronDown className="h-4 w-4 transition group-open:rotate-180" aria-hidden="true" />
+          </summary>
+          <div className="mt-4 space-y-5 border-t border-navy/10 pt-4 text-base leading-relaxed text-olive">
+            <div>
+              <p className="font-semibold text-navy">Bagaimana sistem menilai?</p>
+              <p className="mt-1">
+                FaciCheck mengenali beberapa titik penting pada wajah, kemudian membandingkan sisi kiri dan kanan. Hasil
+                perbandingan tersebut digunakan untuk menghasilkan skor skrining.
+              </p>
+              {score !== null && (
+                <p className="mt-2">
+                  Skor skrining untuk foto ini: <span className="font-semibold text-navy">{score} dari 100</span>. Skor
+                  ini hanya membantu memberikan gambaran awal, bukan ukuran pasti apakah seseorang mengalami Bell’s
+                  palsy atau tidak.
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-navy">Seberapa akurat hasil ini?</p>
+              <p className="mt-1">
+                Dalam pengujian, sistem masih dapat memberikan hasil yang keliru. Sistem dapat melewatkan sebagian
+                kondisi atau memberikan tanda pada orang yang sebenarnya tidak mengalaminya.
+              </p>
+              <p className="mt-2">
+                Karena itu, hasil FaciCheck hanya merupakan informasi awal dan tidak menggantikan pemeriksaan dokter.
+              </p>
+            </div>
+          </div>
+        </details>
       </div>
     </div>
   );
