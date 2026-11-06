@@ -70,10 +70,13 @@ export const REASON_MESSAGES: Record<FrameReason, string> = {
 
 export type RiskCode = "NORMAL" | "MODERATE_RISK" | "HIGH_RISK";
 
-export const LANDMARK_KEYS = ["brow_left", "brow_right", "eye_left", "eye_right", "mouth_left", "mouth_right"] as const;
-export type LandmarkKey = (typeof LANDMARK_KEYS)[number];
-/** Koordinat 0–1 terhadap foto yang dikirim (tidak dicerminkan). */
-export type Landmarks = Record<LandmarkKey, [number, number]>;
+/** Titik [x, y] berskala 0–1 terhadap foto yang dikirim. left/right = sisi anatomis subjek. */
+export type Pt = [number, number];
+export type Landmarks = {
+  brow: { left: Pt; right: Pt };
+  eye: { left: Pt; right: Pt; leftLids: [Pt, Pt][]; rightLids: [Pt, Pt][] };
+  mouth: { left: Pt; right: Pt };
+};
 
 export type PredictOutcome =
   | {
@@ -82,7 +85,13 @@ export type PredictOutcome =
       label: string | null;
       /** dalam persen, mis. 78.5 berarti 78,5% */
       probability: number | null;
-      metrics: { brow_asymmetry: number | null; eye_asymmetry: number | null; mouth_tilt: number | null };
+      metrics: {
+        brow_asymmetry: number | null;
+        eye_asymmetry: number | null;
+        mouth_tilt: number | null;
+        /** positif = sudut bibir kiri subjek lebih rendah daripada kanan */
+        mouth_tilt_signed: number | null;
+      };
       landmarks: Landmarks | null;
     }
   | { kind: "rejected"; violations: string[]; messages: string[] }

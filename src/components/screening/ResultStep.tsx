@@ -11,7 +11,7 @@ import {
   type AreaReading,
   type MetricKey,
 } from "@/lib/result-copy";
-import type { CapturedPhoto, Landmarks, SuccessOutcome } from "@/lib/screening";
+import type { CapturedPhoto, Landmarks, Pt, SuccessOutcome } from "@/lib/screening";
 
 const TINTS = ["rgba(163,165,126,0.3)", "rgba(186,151,150,0.3)", "rgba(147,77,86,0.3)"] as const;
 
@@ -42,46 +42,55 @@ function ResultScale({ index }: { index: number }) {
   );
 }
 
-const PAIRS = [
-  { id: "brow", metric: "brow_asymmetry", a: "brow_left", b: "brow_right" },
-  { id: "eye", metric: "eye_asymmetry", a: "eye_left", b: "eye_right" },
-  { id: "mouth", metric: "mouth_tilt", a: "mouth_left", b: "mouth_right" },
-] as const satisfies readonly { id: string; metric: MetricKey; a: keyof Landmarks; b: keyof Landmarks }[];
-
 /** Garis penuh = posisi sebenarnya. Garis putus-putus = acuan sejajar. Warna mengikuti penilaian bagian itu bila ada. */
 function LandmarkOverlay({ marks, rows }: { marks: Landmarks; rows: AreaReading[] }) {
   const W = 300;
   const H = 400;
-  const midX = (marks.eye_left[0] + marks.eye_right[0] + marks.mouth_left[0] + marks.mouth_right[0]) / 4;
+  const px = (p: Pt) => p[0] * W;
+  const py = (p: Pt) => p[1] * H;
+  const colorOf = (key: MetricKey) => {
+    const level = rows.find((r) => r.key === key)?.level;
+    return level === undefined ? "var(--rose)" : (LAMP_COLORS[level] ?? "var(--rose)");
+  };
+  const midX = ((marks.eye.left[0] + marks.eye.right[0] + marks.mouth.left[0] + marks.mouth.right[0]) / 4) * W;
+  const pairs = [
+    { id: "brow", color: colorOf("brow_asymmetry"), a: marks.brow.left, b: marks.brow.right },
+    { id: "mouth", color: colorOf("mouth_tilt"), a: marks.mouth.left, b: marks.mouth.right },
+  ];
+  const eyeColor = colorOf("eye_asymmetry");
+  const lids = [...marks.eye.leftLids, ...marks.eye.rightLids];
+  const eyeY = ((marks.eye.left[1] + marks.eye.right[1]) / 2) * H;
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true">
-      <line x1={midX * W} y1={H * 0.08} x2={midX * W} y2={H * 0.92} stroke="white" strokeOpacity=".6" strokeWidth="1" strokeDasharray="4 4" />
-      {PAIRS.map((p) => {
-        const a = marks[p.a];
-        const b = marks[p.b];
-        const level = rows.find((r) => r.key === p.metric)?.level;
-        const color = level === undefined ? "var(--rose)" : (LAMP_COLORS[level] ?? "var(--rose)");
-        const midY = (a[1] + b[1]) / 2;
+      <line x1={midX} y1={H * 0.08} x2={midX} y2={H * 0.92} stroke="white" strokeOpacity=".6" strokeWidth="1" strokeDasharray="4 4" />
+      {pairs.map((p) => {
+        const midY = (py(p.a) + py(p.b)) / 2;
         return (
           <g key={p.id}>
-            <line x1={a[0] * W} y1={midY * H} x2={b[0] * W} y2={midY * H} stroke="white" strokeOpacity=".7" strokeWidth="1.2" strokeDasharray="3 3" />
-            <line
-              data-line
-              pathLength={1}
-              strokeDasharray={1}
-              x1={a[0] * W}
-              y1={a[1] * H}
-              x2={b[0] * W}
-              y2={b[1] * H}
-              stroke={color}
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-            <circle data-dot cx={a[0] * W} cy={a[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
-            <circle data-dot cx={b[0] * W} cy={b[1] * H} r="4" fill={color} stroke="white" strokeWidth="1.5" />
+            <line x1={px(p.a)} y1={midY} x2={px(p.b)} y2={midY} stroke="white" strokeOpacity=".7" strokeWidth="1.2" strokeDasharray="3 3" />
+            <line data-line pathLength={1} strokeDasharray={1} x1={px(p.a)} y1={py(p.a)} x2={px(p.b)} y2={py(p.b)} stroke={p.color} strokeWidth="2.5" strokeLinecap="round" />
+            <circle data-dot cx={px(p.a)} cy={py(p.a)} r="4" fill={p.color} stroke="white" strokeWidth="1.5" />
+            <circle data-dot cx={px(p.b)} cy={py(p.b)} r="4" fill={p.color} stroke="white" strokeWidth="1.5" />
           </g>
         );
       })}
+      {/* Mata: acuan sejajar + pasangan kelopak (bukaan mata) bila ada */}
+      <line x1={px(marks.eye.left)} y1={eyeY} x2={px(marks.eye.right)} y2={eyeY} stroke="white" strokeOpacity=".7" strokeWidth="1.2" strokeDasharray="3 3" />
+      {lids.length > 0 ? (
+        <>
+          {lids.map(([a, b], i) => (
+            <line key={i} data-line pathLength={1} strokeDasharray={1} x1={px(a)} y1={py(a)} x2={px(b)} y2={py(b)} stroke={eyeColor} strokeWidth="2" strokeLinecap="round" />
+          ))}
+          <circle data-dot cx={px(marks.eye.left)} cy={py(marks.eye.left)} r="3.5" fill={eyeColor} stroke="white" strokeWidth="1.5" />
+          <circle data-dot cx={px(marks.eye.right)} cy={py(marks.eye.right)} r="3.5" fill={eyeColor} stroke="white" strokeWidth="1.5" />
+        </>
+      ) : (
+        <>
+          <line data-line pathLength={1} strokeDasharray={1} x1={px(marks.eye.left)} y1={py(marks.eye.left)} x2={px(marks.eye.right)} y2={py(marks.eye.right)} stroke={eyeColor} strokeWidth="2.5" strokeLinecap="round" />
+          <circle data-dot cx={px(marks.eye.left)} cy={py(marks.eye.left)} r="4" fill={eyeColor} stroke="white" strokeWidth="1.5" />
+          <circle data-dot cx={px(marks.eye.right)} cy={py(marks.eye.right)} r="4" fill={eyeColor} stroke="white" strokeWidth="1.5" />
+        </>
+      )}
     </svg>
   );
 }
@@ -96,6 +105,15 @@ export function ResultStep({ photo, result, onRetake }: { photo: CapturedPhoto; 
   const summary = summarizeAreas(result.code, rows);
   const marks = result.landmarks;
   const score = result.probability === null ? null : Math.round(Math.min(100, Math.max(0, result.probability)));
+
+  const mouthRow = rows.find((r) => r.key === "mouth_tilt");
+  const signed = result.metrics.mouth_tilt_signed;
+  const directionNote =
+    mouthRow && mouthRow.level >= 1 && signed !== null && signed !== 0
+      ? signed > 0
+        ? "Sudut bibir kiri Anda tampak lebih rendah daripada sisi kanan."
+        : "Sudut bibir kanan Anda tampak lebih rendah daripada sisi kiri."
+      : null;
 
   useGSAP(
     () => {
@@ -183,6 +201,11 @@ export function ResultStep({ photo, result, onRetake }: { photo: CapturedPhoto; 
         {summary && (
           <p data-rise className="mt-2 text-base font-medium text-navy opacity-0">
             {summary}
+          </p>
+        )}
+        {directionNote && (
+          <p data-rise className="mt-2 text-base text-navy opacity-0">
+            {directionNote}
           </p>
         )}
         <p data-rise className="mt-3 text-base leading-relaxed text-olive opacity-0">
