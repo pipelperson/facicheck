@@ -74,7 +74,7 @@ function ScreeningPage() {
       <Backdrop />
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 pt-10 pb-12 lg:pt-14">
-        <StepIndicator current={idx} />
+        <StepIndicator current={idx} complete={step === "hasil"} />
         <p className="sr-only" aria-live="polite">
           Langkah {idx + 1} dari {STEP_LABELS.length}: {STEP_LABELS[idx]}
         </p>
